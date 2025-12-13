@@ -1,0 +1,3444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Medical Support App</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* General Styles */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --background-color: #f4f7f6;
+            --container-bg: #ffffff;
+            --font-color: #333;
+            --border-color: #dee2e6;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --warning-color: #ffc107;
+            --dark-green: #006400;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--font-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Login Page Styles */
+        #login-page {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        #login-page h1 {
+            margin-bottom: 25px;
+            color: var(--primary-color);
+        }
+
+        #login-form .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        #login-form .button-group button {
+            flex: 1;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        #login-error {
+            color: var(--danger-color);
+            margin-top: 15px;
+            height: 1em;
+        }
+        
+        .portal-links {
+            margin-top: 25px;
+            text-align: left;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .portal-links p {
+            margin: 10px 0;
+        }
+
+        .portal-link-item {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: color 0.3s;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .portal-link-item:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+
+        .portal-link-item span {
+            font-size: 1.2em;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+
+        /* Main App Page Styles */
+        #app-page, #remarks-page {
+            display: none;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+            align-items: center;
+        }
+
+        .button-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .button-container button {
+            flex: 1 1 200px;
+        }
+
+        button, .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover,
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .btn-info {
+            background-color: var(--info-color);
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #333;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        
+        /* Activate Button for Freeze Mode */
+        #header-activate-btn {
+            background-color: #ffc107;
+            color: #333;
+            font-weight: bold;
+            display: none; /* Hidden by default */
+        }
+        #header-activate-btn:hover {
+            background-color: #e0a800;
+        }
+
+        /* Specific button colors */
+        #logout-btn {
+            background-color: var(--danger-color);
+        }
+
+        #logout-btn:hover {
+            background-color: #b02a37;
+        }
+
+        #admin-btn {
+            background-color: transparent !important;
+            color: transparent !important;
+            border: none !important;
+            padding: 12px 20px;
+            cursor: pointer;
+        }
+
+        #admin-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        
+        button.secondary, .btn.secondary {
+            background-color: var(--secondary-color);
+        }
+
+        button.secondary:hover, .btn.secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        button.danger, .btn.danger {
+            background-color: var(--danger-color);
+        }
+
+        button.danger:hover, .btn.danger:hover {
+            background-color: #b02a37;
+        }
+        
+        /* New button styles for app functions */
+        .show-records-btn,
+        .hide-records-btn {
+            background-color: var(--primary-color);
+        }
+        .show-records-btn:hover,
+        .hide-records-btn:hover {
+            background-color: #0056b3;
+        }
+
+
+        /* Patient List Styles */
+        #patient-list-container, #remarks-list-container {
+            background-color: var(--container-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        #patient-list-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        
+        #patient-list-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        #toggle-buttons-btn {
+            font-size: 1.5em;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--primary-color);
+            transition: transform 0.3s;
+            padding: 0;
+            line-height: 1;
+        }
+
+        #toggle-buttons-btn:hover {
+            transform: scale(1.1);
+            background-color: transparent;
+        }
+
+        /* LIVE CLOCK STYLE */
+        #live-datetime-display {
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-align: right;
+            font-size: 1.1em;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .patient-item {
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .patient-name {
+            background-color: #e9ecef;
+            padding: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .patient-name:hover {
+            background-color: #dde2e6;
+        }
+
+        .patient-actions, .patient-records {
+            display: none;
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+
+        /* Updated button layout for Patient Actions */
+        .patient-actions {
+            display: none;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .patient-actions button {
+            flex: 1;
+            margin-right: 0;
+        }
+
+        /* Records Table Styles */
+        .records-table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            min-width: 600px;
+        }
+
+        .records-table th, .records-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+        }
+
+        .records-table th {
+            background-color: var(--dark-green);
+            color: white;
+        }
+        
+        .records-table .records-options button {
+            padding: 5px 10px;
+            font-size: 12px;
+            margin: 2px;
+        }
+        
+        /* REMARKS PAGE SPECIFIC STYLES */
+        .remark-done-row {
+            background-color: #d1e7dd !important; /* Greenish */
+            color: #0f5132;
+        }
+
+        .remarks-options-cell {
+            white-space: nowrap;
+        }
+        
+        /* Interactive Row */
+        .remark-row {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .remark-row:hover {
+            background-color: #f1f1f1;
+        }
+        .remark-done-row:hover {
+            background-color: #c3e6cb !important;
+        }
+
+        /* Pagination for Records */
+        .records-pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 15px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .records-pagination .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .records-pagination button {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        .records-pagination span {
+            font-weight: bold;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--container-bg);
+            margin: auto;
+            padding: 25px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        .form-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Summary Modal specific styles */
+        #summary-modal .modal-content {
+            max-width: 700px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-column h3 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+        
+        #summary-patient-list, #summary-time-list {
+            min-height: 150px; /* Give the lists a consistent height */
+        }
+
+        .summary-column .pagination {
+            justify-content: space-between;
+        }
+
+        .summary-column .pagination button {
+            padding: 5px 10px;
+            font-size: 14px;
+            flex-grow: 0;
+        }
+
+        .summary-list-item {
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .summary-list-item:hover {
+            background-color: #e9ecef;
+        }
+
+        .summary-list-item.selected {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        #summary-status-details p strong {
+            display: inline;
+        }
+
+        #summary-status-details p {
+            margin: 5px 0;
+        }
+        
+        .bp-result-display {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .bp-result-display p {
+            margin: 0;
+        }
+        
+        #summary-status-details .vital-note {
+            font-size: 0.75em;
+            font-style: italic;
+            color: var(--secondary-color);
+            margin-top: 5px;
+            display: block;
+        }
+        
+        /* Graph Modal specific styles */
+        #graph-modal .modal-content {
+            max-width: 900px;
+        }
+        .chart-container {
+            margin-bottom: 20px;
+        }
+
+        /* --- VITAL EVALUATION --- */
+        .vital-evaluation-grid {
+            margin-top: 10px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .vital-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .vital-row strong {
+            font-weight: bold;
+        }
+
+        .vital-note {
+            font-size: 0.75em;
+            font-style: italic;
+            color: var(--secondary-color);
+            margin-top: 5px;
+        }
+
+        /* --- BP/VITAL RESULT COLORS --- */
+        .bg-red-100 { background-color: #fee2e2; }
+        .text-red-800 { color: #991b1b; }
+        .bg-orange-100 { background-color: #ffedd5; }
+        .text-orange-800 { color: #9a3412; }
+        .bg-yellow-100 { background-color: #fef9c3; }
+        .text-yellow-800 { color: #854d0e; }
+        .bg-green-100 { background-color: #dcfce7; }
+        .text-green-800 { color: #166534; }
+        .bg-blue-100 { background-color: #dbeafe; }
+        .text-blue-800 { color: #1e40af; }
+        .bg-gray-100 { background-color: #f3f4f6; }
+        .text-gray-800 { color: #1f2937; }
+        
+        .bp-normal { background-color: #dcfce7; color: #166534; }
+        .bp-low, .bp-LOW { background-color: #fef9c3; color: #854d0e; }
+        .bp-high { background-color: #fee2e2; color: #991b1b; }
+
+
+        /* --- FOOTER STYLES --- */
+        #app-page footer, #summary-modal-footer, #remarks-page footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: left;
+            font-size: 0.8em;
+            color: var(--secondary-color);
+        }
+
+        /* --- PROFILE MODAL --- */
+        #profile-modal .modal-content {
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #profile-list-section, #profile-details-section {
+            width: 100%;
+            text-align: left;
+        }
+
+        #profile-list-section h3, #profile-details-section h3 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+
+        #patient-profile-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        #patient-profile-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #patient-profile-list li:hover {
+            background-color: #f0f0f0;
+        }
+
+        #patient-profile-list li.selected {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        #patient-profile-list li.selected:hover {
+            background-color: #0056b3;
+        }
+
+        #profile-details-section {
+            display: none;
+        }
+
+        #profile-details-section p {
+            margin: 8px 0;
+        }
+
+        .profile-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            width: 100%;
+        }
+        
+        .profile-actions .delete-btn {
+            background-color: var(--danger-color);
+        }
+
+        .profile-actions .delete-btn:hover {
+            background-color: #b02a37;
+        }
+
+        /* --- Pagination (Used by Profile Modal & Main List) --- */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 15px;
+            gap: 10px;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .pagination span {
+            font-weight: bold;
+        }
+
+        /* Notification Toast */
+        .notification-toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1001;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 17px;
+            white-space: nowrap;
+        }
+
+        .notification-toast.show {
+            visibility: visible;
+            animation: fadeInOut 4s;
+        }
+
+        @keyframes fadeInOut {
+            0% { bottom: 0; opacity: 0; }
+            10% { bottom: 30px; opacity: 1; }
+            90% { bottom: 30px; opacity: 1; }
+            100% { bottom: 0; opacity: 0; }
+        }
+
+        .notification-toast.success { background-color: var(--success-color); }
+        .notification-toast.error { background-color: var(--danger-color); }
+
+        /* --- ADMIN MODAL STYLES --- */
+        #admin-panel-content {
+            padding-top: 20px;
+        }
+        .admin-options {
+            text-align: left;
+        }
+        .admin-control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .admin-control-group span {
+            flex-grow: 1;
+        }
+        .toggle-arrow {
+            padding: 5px 10px;
+            font-size: 1.5em; /* Larger arrow for better visibility */
+            background-color: var(--info-color);
+            color: white;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        .toggle-arrow:hover {
+            background-color: #138496;
+        }
+        .admin-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        #countdown-timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        #countdownLabel {
+            font-size: 0.9em;
+            color: var(--secondary-color);
+        }
+        #countdownTimer {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        /* --- Enhanced Freeze Effect Styles --- */
+        /* Freezes everything in app page AND remarks page EXCEPT header */
+        body.app-is-frozen #app-page > *:not(header),
+        body.app-is-frozen #remarks-page > *:not(header) {
+            pointer-events: none;
+            filter: grayscale(80%) opacity(0.6);
+            user-select: none;
+        }
+        
+        /* Freezes all modals EXCEPT admin, clear data, and extension code */
+        body.app-is-frozen .modal:not(#admin-modal):not(#clearDataPasswordModal):not(#extension-code-modal) {
+            pointer-events: none;
+            filter: grayscale(80%) opacity(0.6);
+        }
+        
+        /* Ensure Extension Code Modal is clear and interactive when frozen */
+        body.app-is-frozen #extension-code-modal .modal-content {
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.5);
+        }
+
+        /* --- PWA Install Button Styles --- */
+        .install-pwa-btn {
+            display: none; /* Hidden by default */
+            background-color: var(--success-color);
+            color: white;
+            padding: 10px 20px;
+            margin-top: 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+        .install-pwa-btn:hover {
+            background-color: #218838;
+        }
+        #pwa-header-btn {
+             display: none;
+             background-color: #ffffff;
+             color: var(--primary-color);
+             border: 1px solid white;
+             padding: 8px 15px;
+             font-size: 14px;
+        }
+         #pwa-header-btn:hover {
+             background-color: #f0f0f0;
+        }
+
+
+        /* Mobile-first Media Queries */
+        @media (max-width: 575px) {
+            #login-page h1 {
+                font-size: 1.5em;
+            }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 10px;
+                flex-wrap: wrap;
+            }
+            #logout-btn {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            .button-container {
+                justify-content: center;
+                gap: 5px;
+            }
+            .button-container button {
+                flex-grow: 1;
+                font-size: 14px;
+                padding: 10px;
+            }
+            .patient-actions {
+                flex-direction: column;
+            }
+            .patient-actions button {
+                width: 100%;
+            }
+            .records-table .records-options button {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            .admin-buttons-container button {
+                flex-grow: 1;
+                font-size: 14px;
+            }
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (min-width: 576px) {
+            .button-container {
+                justify-content: flex-start;
+            }
+            .patient-actions {
+                gap: 10px;
+            }
+            .patient-actions button {
+                flex: 1;
+            }
+            .admin-buttons-container button {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        // --- CRITICAL FREEZE LOGIC ---
+        // Immediate check to apply freeze effect on page load, preventing UI flash
+        (function() {
+            try {
+                // 1. Force 'stopped' status on first open (if no status exists)
+                if (!localStorage.getItem('appStatus')) {
+                    localStorage.setItem('appStatus', 'stopped');
+                }
+
+                // 2. Check expiration
+                const expirationTimestamp = localStorage.getItem('appExpiration');
+                if (expirationTimestamp) {
+                    const remainingTime = parseInt(expirationTimestamp) - Date.now();
+                    if (remainingTime <= 0) {
+                        localStorage.setItem('appStatus', 'stopped');
+                    }
+                } else {
+                    // NEW: If no expiration exists, force stop (default freeze)
+                    localStorage.setItem('appStatus', 'stopped');
+                }
+
+                // 3. Apply Visual Freeze Class
+                if (localStorage.getItem('appStatus') === 'stopped') {
+                    document.body.classList.add('app-is-frozen');
+                }
+            } catch (e) {
+                console.error('Error applying initial freeze state:', e);
+            }
+        })();
+    </script>
+
+    <div id="login-page">
+        <h1>Vitalis ver. 1.0</h1>
+        <form id="login-form">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+             <div class="button-group">
+                <button type="button" id="enter-code-btn" class="secondary">Enter Code</button>
+                <button type="submit">Log In</button>
+            </div>
+            <p id="login-error"></p>
+        </form>
+        
+        <button id="install-pwa-login" class="install-pwa-btn">📲 Install App to Device</button>
+        
+        <div class="portal-links">
+            <p>
+                <a href="https://alphamedassistance.github.io/portalmain/" class="portal-link-item">
+                    <span>🌍</span> click to access web portal
+                </a>
+            </p>
+            <p>
+                <a href="https://m.me/61578341193853" target="_blank" rel="noopener noreferrer" class="portal-link-item">
+                    <span>🎧</span> click to request assistance
+                </a>
+            </p>
+        </div>
+        </div>
+
+    <div id="app-page">
+        <header>
+            <h1>Vitalis ver. 1.0</h1>
+            <div class="header-actions">
+                <button id="pwa-header-btn">Install App</button>
+                <button id="header-activate-btn" onclick="openModal('extension-code-modal')">Activate App</button>
+                
+                <button class="btn btn-info" id="admin-btn">Admin</button>
+                <button class="secondary" id="logout-btn">Log Out</button>
+            </div>
+        </header>
+
+        <div class="button-container" id="main-buttons-container" style="display:none;">
+            <button id="register-btn">Register Patient</button>
+            <button id="view-profile-btn">View Patient Profile</button>
+            <button id="summary-btn">Summary of Status</button>
+            <button id="remarks-nav-btn">Remarks</button> <button id="data-management-btn">Data Management</button>
+        </div>
+
+        <div id="patient-list-container">
+            <div id="patient-list-header">
+                <h2>List of Patients</h2>
+                <button id="toggle-buttons-btn">💎</button>
+            </div>
+            
+            <div id="live-datetime-display"></div>
+
+            <div class="input-group">
+                <input type="text" id="patient-search" placeholder="Search by patient name...">
+            </div>
+            <div id="patient-list">
+            </div>
+            
+            <div class="pagination" id="main-list-pagination" style="justify-content: center; display: none;">
+                <button id="main-prev-btn">Previous</button>
+                <span id="main-page-info" style="margin: 0 10px;">Page 1</span>
+                <button id="main-next-btn">Next</button>
+            </div>
+
+        </div>
+
+        <footer>
+            <p>Disclaimer: This tool is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment.</p>
+        </footer>
+    </div>
+
+    <div id="remarks-page">
+        <header>
+            <h1>Remarks</h1>
+            <div class="header-actions">
+                <button class="secondary" id="back-to-dashboard-btn">Back to Dashboard</button>
+            </div>
+        </header>
+
+        <div class="button-container">
+            <button id="add-remarks-btn">Add Remarks</button>
+        </div>
+
+        <div id="remarks-list-container">
+            <h2>Remarks Table</h2>
+            <div class="records-table-container">
+                <table class="records-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Created Date</th>
+                            <th>Status</th>
+                            <th>Options</th>
+                        </tr>
+                    </thead>
+                    <tbody id="remarks-table-body">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="remarks-pagination" style="display: none;">
+                <button id="remarks-prev-btn">Previous</button>
+                <span id="remarks-page-info" style="margin: 0 10px;">Page 1</span>
+                <button id="remarks-next-btn">Next</button>
+            </div>
+        </div>
+
+        <footer>
+             <p>Disclaimer: This tool is for informational purposes only.</p>
+        </footer>
+    </div>
+
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <h2>Register New Patient</h2>
+            <form id="register-form">
+                <div class="input-group">
+                    <label for="reg-name">Name</label>
+                    <input type="text" id="reg-name" required>
+                </div>
+                <div class="input-group">
+                    <label for="reg-gender">Gender</label>
+                    <select id="reg-gender" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="reg-age">Age</label>
+                    <input type="number" id="reg-age" required>
+                </div>
+                <div class="input-group">
+                    <label for="reg-birthday">Birthday</label>
+                    <input type="date" id="reg-birthday" required>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="secondary" onclick="closeModal('register-modal')">Cancel</button>
+                    <button type="submit" id="reg-save-btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="extension-code-modal" class="modal">
+        <div class="modal-content">
+            <h2>Enter Access Code</h2>
+            <p style="font-size: 0.9em; color: var(--secondary-color); margin-bottom: 15px;">
+                Enter a valid code to activate the application for 30 days.
+            </p>
+            <form id="extension-code-form">
+                <div class="input-group">
+                    <label for="extension-code">Access Code</label>
+                    <input type="password" id="extension-code" required>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="secondary" onclick="closeModal('extension-code-modal')">Cancel</button>
+                    <button type="submit">Submit Code</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="vitals-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="vitals-patient-name">Input Vital Signs for...</h2>
+            <form id="vitals-form">
+                <input type="hidden" id="vitals-patient-id">
+                <input type="hidden" id="vitals-record-index">
+                <div class="input-group">
+                    <label for="vitals-date">Date</label>
+                    <input type="date" id="vitals-date" required>
+                </div>
+                <div class="input-group">
+                    <label for="vitals-time">Time</label>
+                    <input type="time" id="vitals-time" required>
+                </div>
+                <div class="input-group">
+                    <label for="vitals-bp">BP (e.g., 120/80)</label>
+                    <input type="text" id="vitals-bp" placeholder="Systolic/Diastolic">
+                </div>
+                <div class="input-group">
+                    <label for="vitals-pr">PR (Pulse Rate)</label>
+                    <input type="number" id="vitals-pr">
+                </div>
+                <div class="input-group">
+                    <label for="vitals-rr">RR (Respiratory Rate)</label>
+                    <input type="number" id="vitals-rr">
+                </div>
+                <div class="input-group">
+                    <label for="vitals-temp">TEMP (°C)</label>
+                    <input type="number" step="0.1" id="vitals-temp">
+                </div>
+                <div class="input-group">
+                    <label for="vitals-spo2">SpO2 (%)</label>
+                    <input type="number" id="vitals-spo2">
+                </div>
+                <div class="input-group">
+                    <label for="vitals-bs">Blood Sugar Test (BS) - Non-vital sign</label>
+                    <input type="text" id="vitals-bs">
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="secondary" onclick="closeModal('vitals-modal')">Cancel</button>
+                    <button type="submit" id="vitals-save-btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="remarks-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="remarks-modal-title">Add Remarks</h2>
+            <form id="remarks-form">
+                <input type="hidden" id="remarks-id"> <div class="input-group">
+                    <label for="remarks-title">Title</label>
+                    <input type="text" id="remarks-title" placeholder="Enter title" required>
+                </div>
+                <div class="input-group">
+                    <label for="remarks-content">Remarks</label>
+                    <textarea id="remarks-content" rows="6" placeholder="Enter details here..." required></textarea>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="secondary" onclick="closeModal('remarks-modal')">Cancel</button>
+                    <button type="submit" id="remarks-save-btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="view-remark-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="view-remark-title">Remark Title</h2>
+            <p><small id="view-remark-date"></small> | <strong id="view-remark-status"></strong></p>
+            <hr>
+            <div style="text-align: left; margin: 20px 0;">
+                <p id="view-remark-content" style="white-space: pre-wrap;"></p>
+            </div>
+            <div class="profile-actions">
+                <button type="button" class="secondary" onclick="closeModal('view-remark-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="summary-modal" class="modal">
+        <div class="modal-content">
+            <h2>Summary of Status</h2>
+            <div class="input-group">
+                <label for="summary-date">Select a Date</label>
+                <input type="date" id="summary-date">
+            </div>
+            <hr>
+            <div class="summary-grid">
+                <div class="summary-column" id="summary-patient-col">
+                    <h3>Patients</h3>
+                    <div id="summary-patient-list">
+                        <p>Please select a date.</p>
+                    </div>
+                    <div class="pagination" id="summary-patient-pagination" style="display: none;">
+                        <button id="summary-patient-prev-btn">Prev</button>
+                        <span id="summary-patient-page-info"></span>
+                        <button id="summary-patient-next-btn">Next</button>
+                    </div>
+                </div>
+
+                <div class="summary-column" id="summary-time-col">
+                    <h3>Time</h3>
+                    <div id="summary-time-list">
+                        <p>Select a patient.</p>
+                    </div>
+                    <div class="pagination" id="summary-time-pagination" style="display: none;">
+                        <button id="summary-time-prev-btn">Prev</button>
+                        <span id="summary-time-page-info"></span>
+                        <button id="summary-time-next-btn">Next</button>
+                    </div>
+                    <select id="summary-time-dropdown" style="display: none;"></select>
+                </div>
+                <div class="summary-column" id="summary-details-col">
+                    <h3>Status</h3>
+                    <div id="summary-status-details">
+                        <p>Please select a time.</p>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="profile-actions">
+                <button id="view-graph-btn" class="btn btn-info" style="display: none;">View Graph</button>
+                <button id="summary-pdf-btn" class="btn" style="display: none;">Download PDF</button>
+                <button type="button" class="secondary" onclick="closeModal('summary-modal')">Close</button>
+            </div>
+            <footer id="summary-modal-footer">
+                <p>Disclaimer: This tool is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment.</p>
+            </footer>
+        </div>
+    </div>
+    
+    <div id="graph-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="graph-modal-title">Daily Vitals Graph</h2>
+            <div class="chart-container">
+                <h4>Blood Pressure (mmHg)</h4>
+                <canvas id="bpChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h4>Other Vitals</h4>
+                <canvas id="otherVitalsChart"></canvas>
+            </div>
+            <div class="profile-actions">
+                <button type="button" class="secondary" onclick="closeModal('graph-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <div id="profile-list-section">
+                <h2>Patient Profiles</h2>
+                <ul id="patient-profile-list">
+                    <p>Loading patients...</p>
+                </ul>
+                <div class="pagination" id="profile-pagination">
+                    <button id="prev-btn">Previous</button>
+                    <span id="page-info">Page 1</span>
+                    <button id="next-btn">Next</button>
+                </div>
+                <div class="profile-actions">
+                    <button type="button" class="secondary" onclick="closeModal('profile-modal')">Close</button>
+                </div>
+            </div>
+            <div id="profile-details-section">
+                <h2 id="profile-details-name"></h2>
+                <div id="profile-details-content"></div>
+                <div class="profile-actions">
+                    <button id="delete-patient-btn" class="danger">Delete Patient</button>
+                    <button id="back-to-list-btn" class="secondary">Back to List</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="data-management-modal" class="modal">
+        <div class="modal-content">
+            <h2>Data Management</h2>
+            <div class="button-container" style="margin-bottom: 30px;">
+                <button id="export-btn">Export Data</button>
+                <button id="import-btn" class="secondary">Import Data</button>
+            </div>
+            <div id="import-section" style="display:none;">
+                <hr>
+                <p><strong>Paste JSON Data or Upload a File:</strong></p>
+                <div class="input-group">
+                    <textarea id="import-json-data" rows="8" placeholder='Paste JSON here, e.g., {"patients": [...]}'></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="import-file">Or select a file:</label>
+                    <input type="file" id="import-file" accept=".json">
+                </div>
+                <div class="form-buttons">
+                    <button id="import-cancel-btn" class="secondary">Cancel</button>
+                    <button id="confirm-import-btn">Confirm Import</button>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <button type="button" class="secondary" onclick="closeModal('data-management-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="export-options-modal" class="modal">
+        <div class="modal-content">
+            <h2>Export Data</h2>
+            <p>How would you like to export your patient data?</p>
+            <div class="button-container" style="margin-bottom: 30px;">
+                <button id="download-export-btn">Download JSON File</button>
+                <button id="copy-export-btn" class="secondary">Copy JSON to Clipboard</button>
+            </div>
+            <div class="profile-actions">
+                <button type="button" class="secondary" onclick="closeModal('export-options-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="modal">
+        <div class="modal-content">
+            <div id="admin-login">
+                <h2>Admin Login</h2>
+                <div class="input-group">
+                    <label for="admin-password">Password</label>
+                    <input type="password" id="admin-password">
+                </div>
+                <button id="admin-login-btn">Submit</button>
+                <button class="secondary" onclick="closeModal('admin-modal')">Cancel</button>
+            </div>
+            <div id="admin-panel-content" style="display: none;">
+                <h2>Admin Panel</h2>
+                <div class="admin-options">
+                    <div class="admin-control-group">
+                        <button class="btn btn-info toggle-arrow" id="toggleDateInputsBtn">↓</button>
+                    </div>
+                    <div class="admin-controls" id="dateInputs" style="display: none;">
+                        <div class="input-group">
+                            <label for="timerStartDate">Start Date & Time</label>
+                            <input type="datetime-local" id="timerStartDate">
+                        </div>
+                        <div class="input-group">
+                            <label for="timerEndDate">End Date & Time</label>
+                            <input type="datetime-local" id="timerEndDate">
+                        </div>
+                        <button class="btn btn-success" id="startProgressBtn" disabled>Start Progress</button>
+                    </div>
+                    
+                    <div class="admin-control-group" style="margin-top: 20px;">
+                        <button class="btn btn-info toggle-arrow" id="toggleCountdownBtn">↓</button>
+                    </div>
+                    <div class="admin-controls" id="countdownDisplay" style="display: none;">
+                        <div id="countdown-timer-container">
+                            <span id="countdownLabel">No progress is active.</span>
+                            <span id="countdownTimer"></span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="admin-buttons-container" style="display: flex; justify-content: space-between; gap: 10px; align-items: center;">
+                        <button class="btn danger" id="clearDataBtn">Clear All Data</button>
+                        <button class="btn btn-info" id="system-check-btn">Check System for Errors</button>
+                        <button class="secondary" id="stopTimerBtn">Stop Progress</button>
+                    </div>
+                </div>
+                <div class="profile-actions">
+                    <button type="button" class="secondary" onclick="closeModal('admin-modal')">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="clearDataPasswordModal">
+        <div class="modal-content">
+            <h2>Confirm Clear Data</h2>
+            <form id="clearDataForm">
+                <p>Please enter the admin password to confirm deletion of all data.</p>
+                <div class="input-group">
+                    <label for="clearDataPassword">Admin Password</label>
+                    <input type="password" id="clearDataPassword" required>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="secondary" onclick="closeModal('clearDataPasswordModal')">Cancel</button>
+                    <button type="submit" class="btn danger">Confirm Clear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="notification-toast" class="notification-toast"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            
+            // --- NEW LIVE CLOCK FUNCTIONALITY ---
+            function updateLiveClock() {
+                const now = new Date();
+                const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+                const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                const dateString = now.toLocaleDateString('en-US', dateOptions);
+                const timeString = now.toLocaleTimeString('en-US', timeOptions);
+                
+                const displayEl = document.getElementById('live-datetime-display');
+                if(displayEl) {
+                    displayEl.textContent = `${dateString} | ${timeString}`;
+                }
+            }
+
+            // Start the clock immediately and update every second
+            updateLiveClock();
+            setInterval(updateLiveClock, 1000);
+
+
+            // --- SUPABASE SETUP ---
+            const supabaseUrl = 'https://wmciiqeywkluzkslzsrq.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtY2lpcWV5d2tsdXprc2x6c3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNDk0MjksImV4cCI6MjA3OTgyNTQyOX0.qVXO8GcXW8AsjWT4N-zkfW5B0g5qijoPX2mOZc4btVQ';
+            const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+            // --- PWA SERVICE WORKER REGISTRATION & INSTALL LOGIC ---
+            let deferredPrompt;
+            const installBtnLogin = document.getElementById('install-pwa-login');
+            const installBtnHeader = document.getElementById('pwa-header-btn');
+
+            // 1. Register Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./service-worker.js')
+                .then((reg) => console.log('Service Worker Registered!', reg))
+                .catch((err) => console.log('Service Worker registration failed:', err));
+            }
+
+            // 2. Handle the install prompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Prevent Chrome 67 and earlier from automatically showing the prompt
+                e.preventDefault();
+                // Stash the event so it can be triggered later.
+                deferredPrompt = e;
+                
+                // Show the install buttons
+                installBtnLogin.style.display = 'block';
+                installBtnHeader.style.display = 'block';
+            });
+
+            // 3. Install Button Click Listener
+            function handleInstallClick() {
+                if(deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the A2HS prompt');
+                        } else {
+                            console.log('User dismissed the A2HS prompt');
+                        }
+                        deferredPrompt = null;
+                        // Hide buttons after install
+                        installBtnLogin.style.display = 'none';
+                        installBtnHeader.style.display = 'none';
+                    });
+                }
+            }
+
+            installBtnLogin.addEventListener('click', handleInstallClick);
+            installBtnHeader.addEventListener('click', handleInstallClick);
+            
+            // 4. Hide buttons if already installed (display-mode check)
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                installBtnLogin.style.display = 'none';
+                installBtnHeader.style.display = 'none';
+            }
+
+
+            // --- DATABASE SETUP ---
+            const DB_NAME = 'PatientDB';
+            const DB_VERSION = 2; // Updated version for Remarks table
+            const STORE_NAME = 'patients';
+            const STORE_REMARKS = 'remarks'; // New Store
+            let db;
+            let patientsCache = [];
+            const patientsPerPage = 5; // For profile modal
+            const recordsPerPage = 5;
+            let currentPage = 1; // For profile modal
+            
+            let mainListPage = 1;
+            const mainListPerPage = 5;
+            
+            // Remarks Pagination variables
+            let remarksPage = 1;
+            const remarksPerPage = 5;
+
+            // Summary Pagination variables
+            let summaryPatientPage = 1;
+            let summaryTimePage = 1;
+            const summaryListPerPage = 5;
+            let summaryPatientsCache = [];
+            let summaryRecordsCache = [];
+
+            let recordPages = {};
+            let currentPatientId = null;
+            let summaryRecord = null;
+            
+            // Chart instances
+            let bpChartInstance = null;
+            let otherVitalsChartInstance = null;
+            
+            // Admin Panel Constants
+            const ADMIN_PASSWORD = 'urielllamasadmin2025';
+            let countdownInterval = null;
+
+            // --- DOM Elements ---
+            const loginPage = document.getElementById('login-page');
+            const appPage = document.getElementById('app-page');
+            const remarksPageSection = document.getElementById('remarks-page'); 
+            const loginForm = document.getElementById('login-form');
+            const loginError = document.getElementById('login-error');
+            const logoutBtn = document.getElementById('logout-btn');
+            const registerBtn = document.getElementById('register-btn');
+            const viewProfileBtn = document.getElementById('view-profile-btn');
+            const summaryBtn = document.getElementById('summary-btn');
+            const dataManagementBtn = document.getElementById('data-management-btn');
+            const remarksNavBtn = document.getElementById('remarks-nav-btn'); // New Nav Button
+            const backToDashboardBtn = document.getElementById('back-to-dashboard-btn'); // New Back Button
+            const registerForm = document.getElementById('register-form');
+            const regNameInput = document.getElementById('reg-name'); // Added for auto-capitalization
+            const regAgeInput = document.getElementById('reg-age'); // Added for age validation
+            const regSaveBtn = document.getElementById('reg-save-btn');
+            const vitalsForm = document.getElementById('vitals-form');
+            const vitalsSaveBtn = document.getElementById('vitals-save-btn');
+            const patientListDiv = document.getElementById('patient-list');
+            const summaryDateInput = document.getElementById('summary-date');
+            const summaryPatientList = document.getElementById('summary-patient-list');
+            
+            const summaryTimeList = document.getElementById('summary-time-list');
+            const summaryTimeDropdown = document.getElementById('summary-time-dropdown'); // Kept for graph data passing
+
+            const summaryStatusDetails = document.getElementById('summary-status-details');
+
+            const summaryPatientPagination = document.getElementById('summary-patient-pagination');
+            const summaryPatientPrevBtn = document.getElementById('summary-patient-prev-btn');
+            const summaryPatientNextBtn = document.getElementById('summary-patient-next-btn');
+            const summaryPatientPageInfo = document.getElementById('summary-patient-page-info');
+            
+            const summaryTimePagination = document.getElementById('summary-time-pagination');
+            const summaryTimePrevBtn = document.getElementById('summary-time-prev-btn');
+            const summaryTimeNextBtn = document.getElementById('summary-time-next-btn');
+            const summaryTimePageInfo = document.getElementById('summary-time-page-info');
+
+            const summaryPdfBtn = document.getElementById('summary-pdf-btn');
+            const viewGraphBtn = document.getElementById('view-graph-btn');
+            const profileModal = document.getElementById('profile-modal');
+            const profileListSection = document.getElementById('profile-list-section');
+            const profileDetailsSection = document.getElementById('profile-details-section');
+            const patientProfileList = document.getElementById('patient-profile-list');
+            const profileDetailsName = document.getElementById('profile-details-name');
+            const profileDetailsContent = document.getElementById('profile-details-content');
+            const backToListBtn = document.getElementById('back-to-list-btn');
+            const deletePatientBtn = document.getElementById('delete-patient-btn');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const pageInfoSpan = document.getElementById('page-info');
+            const dataManagementModal = document.getElementById('data-management-modal');
+            const exportBtn = document.getElementById('export-btn');
+            const importBtn = document.getElementById('import-btn');
+            const importSection = document.getElementById('import-section');
+            const importJsonDataTextarea = document.getElementById('import-json-data');
+            const importFile = document.getElementById('import-file');
+            const confirmImportBtn = document.getElementById('confirm-import-btn');
+            const importCancelBtn = document.getElementById('import-cancel-btn');
+            const exportOptionsModal = document.getElementById('export-options-modal');
+            const downloadExportBtn = document.getElementById('download-export-btn');
+            const copyExportBtn = document.getElementById('copy-export-btn');
+            
+            // Remarks Elements
+            const addRemarksBtn = document.getElementById('add-remarks-btn');
+            const remarksModal = document.getElementById('remarks-modal');
+            const remarksForm = document.getElementById('remarks-form');
+            const remarksSaveBtn = document.getElementById('remarks-save-btn');
+            const remarksTableBody = document.getElementById('remarks-table-body');
+            const remarksPagination = document.getElementById('remarks-pagination');
+            const remarksPrevBtn = document.getElementById('remarks-prev-btn');
+            const remarksNextBtn = document.getElementById('remarks-next-btn');
+            const remarksPageInfo = document.getElementById('remarks-page-info');
+            const remarksTitleInput = document.getElementById('remarks-title');
+            const remarksContentInput = document.getElementById('remarks-content');
+            
+            // View Remark Modal Elements
+            const viewRemarkModal = document.getElementById('view-remark-modal');
+            const viewRemarkTitle = document.getElementById('view-remark-title');
+            const viewRemarkDate = document.getElementById('view-remark-date');
+            const viewRemarkStatus = document.getElementById('view-remark-status');
+            const viewRemarkContent = document.getElementById('view-remark-content');
+
+
+            // Admin Panel DOM
+            const adminBtn = document.getElementById('admin-btn');
+            const adminModal = document.getElementById('admin-modal');
+            const adminPasswordInput = document.getElementById('admin-password');
+            const adminLoginBtn = document.getElementById('admin-login-btn');
+            const adminLoginSection = document.getElementById('admin-login');
+            const adminPanelContent = document.getElementById('admin-panel-content');
+            const toggleDateInputsBtn = document.getElementById('toggleDateInputsBtn');
+            const toggleCountdownBtn = document.getElementById('toggleCountdownBtn');
+            const dateInputs = document.getElementById('dateInputs');
+            const countdownDisplay = document.getElementById('countdownDisplay');
+            const timerStartDateInput = document.getElementById('timerStartDate');
+            const timerEndDateInput = document.getElementById('timerEndDate');
+            const countdownTimerEl = document.getElementById('countdownTimer');
+            const startProgressBtn = document.getElementById('startProgressBtn');
+            const stopTimerBtn = document.getElementById('stopTimerBtn');
+            const clearDataBtn = document.getElementById('clearDataBtn');
+            const clearDataPasswordModal = document.getElementById('clearDataPasswordModal');
+            const clearDataPasswordInput = document.getElementById('clearDataPassword');
+            const clearDataForm = document.getElementById('clearDataForm');
+            const countdownLabel = document.getElementById('countdownLabel');
+            const systemCheckBtn = document.getElementById('system-check-btn');
+
+            // Extension Code Elements
+            const enterCodeBtn = document.getElementById('enter-code-btn');
+            const headerActivateBtn = document.getElementById('header-activate-btn');
+            const extensionCodeForm = document.getElementById('extension-code-form');
+            const extensionCodeInput = document.getElementById('extension-code');
+
+            // NEW: Search and Toggle Elements
+            const patientSearchInput = document.getElementById('patient-search');
+            const toggleButtonsBtn = document.getElementById('toggle-buttons-btn');
+            const mainButtonsContainer = document.getElementById('main-buttons-container');
+            
+            const mainListPagination = document.getElementById('main-list-pagination');
+            const mainPrevBtn = document.getElementById('main-prev-btn');
+            const mainNextBtn = document.getElementById('main-next-btn');
+            const mainPageInfoSpan = document.getElementById('main-page-info');
+            
+            // Graph Modal Elements
+            const graphModalTitle = document.getElementById('graph-modal-title');
+            const bpChartCanvas = document.getElementById('bpChart');
+            const otherVitalsChartCanvas = document.getElementById('otherVitalsChart');
+
+
+            function initDB() {
+                return new Promise((resolve, reject) => {
+                    if (!('indexedDB' in window)) {
+                        reject('IndexedDB not supported');
+                        return;
+                    }
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+                    request.onupgradeneeded = (event) => {
+                        const dbInstance = event.target.result;
+                        if (!dbInstance.objectStoreNames.contains(STORE_NAME)) {
+                            dbInstance.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        }
+                        // Create Remarks Store
+                        if (!dbInstance.objectStoreNames.contains(STORE_REMARKS)) {
+                            dbInstance.createObjectStore(STORE_REMARKS, { keyPath: 'id', autoIncrement: true });
+                        }
+                    };
+                    request.onerror = (event) => {
+                        console.error('Database error:', event.target.error);
+                        reject('Database error');
+                    };
+                    request.onsuccess = async (event) => {
+                        db = event.target.result;
+                        console.log('Database opened successfully.');
+                        const transaction = db.transaction([STORE_NAME], 'readonly');
+                        const store = transaction.objectStore(STORE_NAME);
+                        const countRequest = store.count();
+                        countRequest.onsuccess = () => {
+                            if (countRequest.result === 0) {
+                                seedDatabase();
+                            }
+                            resolve(db);
+                        };
+                        countRequest.onerror = (e) => {
+                            console.error('Error counting records:', e.target.error);
+                            resolve(db);
+                        };
+                    };
+                });
+            }
+
+            function seedDatabase() {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const johnWithRecords = {
+                    id: 1,
+                    name: "John",
+                    gender: "Male",
+                    age: 35,
+                    birthday: "1988-05-15",
+                    records: [{
+                        date: "2025-09-13",
+                        time: "18:00",
+                        bp: "120/80",
+                        pr: 75,
+                        rr: 16,
+                        temp: 36.8,
+                        spo2: 98
+                    },
+                    {
+                        date: "2025-09-13",
+                        time: "12:00",
+                        bp: "150/95",
+                        pr: 88,
+                        rr: 21,
+                        temp: 37.9,
+                        spo2: 94
+                    },
+                    {
+                        date: "2025-09-12",
+                        time: "08:30",
+                        bp: "105/65",
+                        pr: 62,
+                        rr: 14,
+                        temp: 36.5,
+                        spo2: 99
+                    }]
+                };
+                const addJohnRequest = store.add(johnWithRecords);
+                addJohnRequest.onerror = (event) => {
+                    console.error('Error adding seeded data:', event.target.error);
+                };
+            }
+
+            // --- DATABASE CRUD WRAPPERS ---
+            function getStore(mode, storeName = STORE_NAME) {
+                const transaction = db.transaction([storeName], mode);
+                return transaction.objectStore(storeName);
+            }
+            
+            // Patient CRUD
+            function addPatient(patient) {
+                return new Promise((resolve, reject) => {
+                    const store = getStore('readwrite');
+                    const request = store.add(patient);
+                    request.onsuccess = () => resolve();
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+            function getAllPatients() {
+                return new Promise((resolve, reject) => {
+                    const store = getStore('readonly');
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+            function getPatient(id) {
+                return new Promise((resolve, reject) => {
+                    const store = getStore('readonly');
+                    const request = store.get(id);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+            function updatePatient(patient) {
+                return new Promise((resolve, reject) => {
+                    const store = getStore('readwrite');
+                    const request = store.put(patient);
+                    request.onsuccess = () => resolve();
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+            function deletePatient(id) {
+                return new Promise((resolve, reject) => {
+                    const store = getStore('readwrite');
+                    const request = store.delete(id);
+                    request.onsuccess = () => resolve();
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+
+            // Remarks CRUD
+            function addRemark(remark) {
+                 return new Promise((resolve, reject) => {
+                    const store = getStore('readwrite', STORE_REMARKS);
+                    const request = store.add(remark);
+                    request.onsuccess = () => resolve();
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+            function getAllRemarks() {
+                 return new Promise((resolve, reject) => {
+                    const store = getStore('readonly', STORE_REMARKS);
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+            function updateRemark(remark) {
+                 return new Promise((resolve, reject) => {
+                    const store = getStore('readwrite', STORE_REMARKS);
+                    const request = store.put(remark);
+                    request.onsuccess = () => resolve();
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+            function deleteRemark(id) {
+                 return new Promise((resolve, reject) => {
+                    const store = getStore('readwrite', STORE_REMARKS);
+                    const request = store.delete(id);
+                    request.onsuccess = () => resolve();
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+            function getRemark(id) {
+                 return new Promise((resolve, reject) => {
+                    const store = getStore('readonly', STORE_REMARKS);
+                    const request = store.get(id);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+
+
+            async function clearDatabase() {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([STORE_NAME, STORE_REMARKS], 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const remarksStore = transaction.objectStore(STORE_REMARKS);
+                    
+                    store.clear();
+                    const remarksRequest = remarksStore.clear();
+                    
+                    remarksRequest.onsuccess = () => {
+                        console.log('Database cleared successfully.');
+                        localStorage.removeItem('appExpiration');
+                        localStorage.removeItem('extensionLevel');
+                        localStorage.setItem('appStatus', 'stopped'); // Reset to stopped
+                        resolve();
+                    };
+                    remarksRequest.onerror = (event) => {
+                        console.error('Error clearing database:', event.target.error);
+                        reject(event.target.error);
+                    };
+                });
+            }
+            
+            // --- UI RENDER FUNCTIONS ---
+            async function renderPatientList(filterText = '') {
+                const patients = await getAllPatients();
+                const filteredPatients = patients.filter(patient =>
+                    patient.name.toLowerCase().includes(filterText.toLowerCase())
+                );
+
+                const totalPages = Math.ceil(filteredPatients.length / mainListPerPage);
+                if (mainListPage > totalPages && totalPages > 0) {
+                    mainListPage = totalPages; 
+                }
+                if (filteredPatients.length === 0) {
+                    mainListPage = 1; 
+                }
+
+                const startIndex = (mainListPage - 1) * mainListPerPage;
+                const endIndex = startIndex + mainListPerPage;
+                const patientsToDisplay = filteredPatients.slice(startIndex, endIndex);
+
+                patientListDiv.innerHTML = '';
+                
+                if (patientsToDisplay.length === 0) {
+                    patientListDiv.innerHTML = '<p>No patients found.</p>';
+                } else {
+                    patientsToDisplay.forEach(patient => { 
+                        const patientItem = document.createElement('div');
+                        patientItem.className = 'patient-item';
+                        patientItem.innerHTML = `
+                            <div class="patient-name" data-id="${patient.id}">
+                                <span>${patient.name} (Age: ${patient.age})</span>
+                                <span>&#9662;</span>
+                            </div>
+                            <div class="patient-actions">
+                                <button class="input-vitals-btn" data-id="${patient.id}">Input Vital Signs</button>
+                                <button class="show-records-btn" data-id="${patient.id}">Show Records</button>
+                            </div>
+                            <div class="patient-records"></div>
+                        `;
+                        patientListDiv.appendChild(patientItem);
+                    });
+                }
+
+                if (totalPages > 1) {
+                    mainPageInfoSpan.textContent = `Page ${mainListPage} of ${totalPages}`;
+                    mainPrevBtn.disabled = mainListPage === 1;
+                    mainNextBtn.disabled = mainListPage === totalPages;
+                    mainListPagination.style.display = 'flex';
+                } else {
+                    mainListPagination.style.display = 'none';
+                }
+
+                applyUIState();
+            }
+
+            async function renderRecordsGrid(patientId, container, page) {
+                const patient = await getPatient(patientId);
+                const sortedRecords = [...patient.records].sort((a, b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.date}`));
+                const totalRecords = sortedRecords.length;
+                const totalPages = Math.ceil(totalRecords / recordsPerPage);
+                const currentPage = page || recordPages[patientId] || 1;
+                recordPages[patientId] = currentPage;
+                
+                container.innerHTML = '';
+                
+                if (totalRecords === 0) {
+                    container.innerHTML = '<p>No records found for this patient.</p>';
+                    return;
+                }
+                const startIndex = (currentPage - 1) * recordsPerPage;
+                const endIndex = startIndex + recordsPerPage;
+                const recordsToDisplay = sortedRecords.slice(startIndex, endIndex);
+                const isAdult = patient.age >= 18;
+                // Added Blood Sugar Header
+                let tableHTML = `<div class="records-table-container"><table class="records-table"><thead><tr><th>Date</th><th>Time</th><th>BP</th><th>PR</th><th>RR</th><th>TEMP</th><th>SpO2</th><th>BS(Non-VS)</th><th>Options</th></tr></thead><tbody>`;
+                recordsToDisplay.forEach((record, index) => {
+                    const originalIndex = patient.records.findIndex(r => r.date === record.date && r.time === record.time);
+                    const bpEval = isAdult ? getBPStatus(record.bp) : { color: '' };
+                    const prEval = isAdult ? getVitalStatus('PR', record.pr) : { colorClass: '' };
+                    const rrEval = isAdult ? getVitalStatus('RR', record.rr) : { colorClass: '' };
+                    const tempEval = isAdult ? getVitalStatus('TEMP', record.temp) : { colorClass: '' };
+                    const spo2Eval = isAdult ? getVitalStatus('SpO2', record.spo2) : { colorClass: '' };
+                    // Added Blood Sugar Cell
+                    tableHTML += `
+                        <tr>
+                            <td>${record.date}</td>
+                            <td>${formatTime12Hour(record.time)}</td>
+                            <td class="${bpEval.color}">${record.bp}</td>
+                            <td class="${prEval.colorClass}">${record.pr}</td>
+                            <td class="${rrEval.colorClass}">${record.rr}</td>
+                            <td class="${tempEval.colorClass}">${record.temp}°C</td>
+                            <td class="${spo2Eval.colorClass}">${record.spo2}%</td>
+                            <td>${record.bloodSugar || '-'}</td>
+                            <td class="records-options">
+                                <button class="edit-vital-btn" data-patient-id="${patient.id}" data-index="${originalIndex}">Edit</button>
+                                <button class="delete-vital-btn danger" data-patient-id="${patient.id}" data-index="${originalIndex}">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tableHTML += '</tbody></table></div>';
+                
+                let controlsHtml = '';
+                if (totalRecords > 0) {
+                    controlsHtml = `<div class="records-pagination">`;
+                    if (totalPages > 1) {
+                        controlsHtml += `
+                            <div class="pagination-controls">
+                                <button class="records-prev-btn" data-id="${patientId}" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
+                                <span style="margin: 0 5px;">Page ${currentPage} of ${totalPages}</span>
+                                <button class="records-next-btn" data-id="${patientId}" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+                            </div>
+                        `;
+                    }
+                    if(isAdult) {
+                        controlsHtml += `<p style="font-size: 0.8em; color: var(--secondary-color); margin-top: 10px;">Vitals are color-coded based on standard ranges for adults.</p>`;
+                    }
+                    controlsHtml += `<button class="records-pdf-btn" data-id="${patientId}" style="margin-left: auto;">Download PDF</button></div>`;
+                }
+
+                container.innerHTML = tableHTML + controlsHtml;
+                applyUIState();
+            }
+            
+            // --- REMARKS RENDER LOGIC ---
+            async function renderRemarksTable() {
+                const remarks = await getAllRemarks();
+                // Sort by ID descending (newest first)
+                const sortedRemarks = remarks.sort((a, b) => b.id - a.id);
+                
+                const totalPages = Math.ceil(sortedRemarks.length / remarksPerPage);
+                if (remarksPage > totalPages && totalPages > 0) remarksPage = totalPages;
+                if (sortedRemarks.length === 0) remarksPage = 1;
+                
+                const startIndex = (remarksPage - 1) * remarksPerPage;
+                const endIndex = startIndex + remarksPerPage;
+                const remarksToDisplay = sortedRemarks.slice(startIndex, endIndex);
+                
+                remarksTableBody.innerHTML = '';
+                
+                if (remarksToDisplay.length === 0) {
+                    remarksTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No remarks found.</td></tr>';
+                } else {
+                    remarksToDisplay.forEach(remark => {
+                        const row = document.createElement('tr');
+                        row.classList.add('remark-row');
+                        row.dataset.id = remark.id;
+                        
+                        let statusButton = '';
+                        if (remark.status === 'Done') {
+                            row.classList.add('remark-done-row');
+                            // Show Undo Button
+                            statusButton = `<button class="btn-warning undo-remark-btn" data-id="${remark.id}">Undo</button>`;
+                        } else {
+                            // Show Done Button
+                            statusButton = `<button class="btn-success done-remark-btn" data-id="${remark.id}">Done</button>`;
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${remark.title}</td>
+                            <td>${new Date(remark.date).toLocaleDateString()} ${new Date(remark.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                            <td>${remark.status}</td>
+                            <td class="remarks-options-cell">
+                                <button class="btn-info edit-remark-btn" data-id="${remark.id}">Edit</button>
+                                ${statusButton}
+                                <button class="danger delete-remark-btn" data-id="${remark.id}">Delete</button>
+                            </td>
+                        `;
+                        remarksTableBody.appendChild(row);
+                    });
+                }
+                
+                if (totalPages > 1) {
+                    remarksPageInfo.textContent = `Page ${remarksPage} of ${totalPages}`;
+                    remarksPrevBtn.disabled = remarksPage === 1;
+                    remarksNextBtn.disabled = remarksPage === totalPages;
+                    remarksPagination.style.display = 'flex';
+                } else {
+                    remarksPagination.style.display = 'none';
+                }
+                
+                applyUIState();
+            }
+            
+            function renderProfileList(filterText = '') {
+                patientProfileList.innerHTML = '';
+                const filteredPatients = patientsCache.filter(patient =>
+                    patient.name.toLowerCase().includes(filterText.toLowerCase())
+                );
+                const startIndex = (currentPage - 1) * patientsPerPage;
+                const endIndex = startIndex + patientsPerPage;
+                const patientsToDisplay = filteredPatients.slice(startIndex, endIndex);
+                if (patientsToDisplay.length === 0) {
+                    patientProfileList.innerHTML = '<p>No patients registered yet.</p>';
+                    prevBtn.disabled = true;
+                    nextBtn.disabled = true;
+                    pageInfoSpan.textContent = '';
+                    return;
+                }
+                patientsToDisplay.forEach(patient => {
+                    const li = document.createElement('li');
+                    li.textContent = patient.name;
+                    li.dataset.id = patient.id;
+                    li.addEventListener('click', () => {
+                        showProfileDetailsSection(patient);
+                    });
+                    patientProfileList.appendChild(li);
+                });
+                const totalPages = Math.ceil(filteredPatients.length / patientsPerPage);
+                pageInfoSpan.textContent = `Page ${currentPage} of ${totalPages}`;
+                prevBtn.disabled = currentPage === 1;
+                nextBtn.disabled = currentPage === totalPages || patientsToDisplay.length < patientsPerPage;
+                applyUIState();
+            }
+            function showProfileListSection() {
+                profileListSection.style.display = 'block';
+                profileDetailsSection.style.display = 'none';
+                renderProfileList();
+            }
+            function showProfileDetailsSection(patient) {
+                currentPatientId = patient.id;
+                profileListSection.style.display = 'none';
+                profileDetailsSection.style.display = 'block';
+                profileDetailsName.textContent = patient.name;
+                profileDetailsContent.innerHTML = `
+                    <p><strong>Name:</strong> ${patient.name}</p>
+                    <p><strong>Gender:</strong> ${patient.gender}</p>
+                    <p><strong>Age:</strong> ${patient.age}</p>
+                    <p><strong>Birthday:</strong> ${patient.birthday}</p>
+                    `;
+            }
+
+            // --- VITAL SIGN EVALUATION LOGIC ---
+            function formatTime12Hour(timeString) {
+                if (!timeString) return '';
+                const [hourString, minute] = timeString.split(':');
+                let hour = parseInt(hourString);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                hour = hour % 12;
+                hour = hour ? hour : 12;
+                return `${hour}:${minute} ${ampm}`;
+            }
+            function getVitalStatus(name, value) {
+                let normalMin, normalMax, lowStatus = 'Low', highStatus = 'High';
+                value = parseFloat(value);
+                if (isNaN(value)) return { status: 'Invalid', colorClass: 'bg-gray-100 text-gray-800', note: '' };
+                switch (name) {
+                    case 'PR': normalMin = 60; normalMax = 100; break;
+                    case 'RR': normalMin = 12; normalMax = 20; break;
+                    case 'TEMP': normalMin = 36; normalMax = 37.5; highStatus = 'High / Feverish'; break;
+                    case 'SpO2': normalMin = 95; normalMax = 100; highStatus = 'Normal'; break;
+                    default: return { status: '', colorClass: '', note: '' };
+                }
+                if (value < normalMin) return { status: lowStatus, colorClass: 'bg-yellow-100 text-yellow-800', note: 'Consult a doctor if symptomatic.' };
+                if (value > normalMax) {
+                    if (name === 'SpO2' && value > 100) return { status: 'Error', colorClass: 'bg-gray-100 text-gray-800', note: 'Invalid reading.' };
+                    return { status: highStatus, colorClass: 'bg-red-100 text-red-800', note: 'Consult a doctor if symptomatic.' };
+                }
+                return { status: 'Normal', colorClass: 'bg-green-100 text-green-800', note: '' };
+            }
+            function getBPStatus(bpString) {
+                const invalidResult = { level: 'Invalid Input', desc: 'BP value must be in "Systolic/Diastolic" format.', color: 'bg-gray-100 text-gray-800' };
+                if (!bpString || !bpString.includes('/')) return invalidResult;
+                const [systolic, diastolic] = bpString.split('/').map(n => parseInt(n));
+                if (isNaN(systolic) || isNaN(diastolic)) return invalidResult;
+
+                if (systolic >= 140 || diastolic >= 90) {
+                    return { level: 'High', color: 'bp-high', desc: '' };
+                } else if (systolic >= 130 && diastolic >= 80) {
+                    return { level: 'High', color: 'bp-high', desc: '' };
+                } else if (systolic >= 120 && diastolic < 80) {
+                    return { level: 'LOW', color: 'bp-LOW', desc: 'LOW Blood Pressure' };
+                } else if (systolic < 90 || diastolic < 60) {
+                    return { level: 'Low', color: 'bp-low', desc: '' };
+                } else {
+                    return { level: 'Normal', color: 'bp-normal', desc: 'Normal Blood Pressure' };
+                }
+            }
+            
+            async function renderVitalsGraph() {
+                // Read from summaryTimeList.dataset
+                const patientId = parseInt(summaryTimeList.dataset.patientId);
+                const selectedDate = summaryTimeList.dataset.date;
+
+                if (!patientId || !selectedDate) return;
+
+                const patient = await getPatient(patientId);
+                const recordsForDay = patient.records
+                    .filter(r => r.date === selectedDate)
+                    .sort((a, b) => a.time.localeCompare(b.time));
+
+                graphModalTitle.textContent = `Daily Vitals Graph for ${patient.name} on ${selectedDate}`;
+
+                // --- NEW BP GRAPH DATA PREP ---
+                // Filter records to only include those with valid BP data
+                const bpRecords = recordsForDay.filter(r => r.bp && r.bp.includes('/'));
+                // Create labels ONLY from those records
+                const bpLabels = bpRecords.map(r => formatTime12Hour(r.time));
+                const bpSystolicData = bpRecords.map(r => parseInt(r.bp.split('/')[0]) || null);
+                const bpDiastolicData = bpRecords.map(r => parseInt(r.bp.split('/')[1]) || null);
+                
+                // --- OTHER VITALS GRAPH DATA PREP (Keep original logic) ---
+                // Use all time labels for this graph
+                const labels = recordsForDay.map(r => formatTime12Hour(r.time));
+                const prData = recordsForDay.map(r => parseFloat(r.pr) || null);
+                const rrData = recordsForDay.map(r => parseFloat(r.rr) || null);
+                const tempData = recordsForDay.map(r => parseFloat(r.temp) || null);
+                const spo2Data = recordsForDay.map(r => parseFloat(r.spo2) || null);
+                // NEW: Blood Sugar Data for Graph
+                const bsData = recordsForDay.map(r => parseFloat(r.bloodSugar) || null);
+                
+                if(bpChartInstance) bpChartInstance.destroy();
+                bpChartInstance = new Chart(bpChartCanvas, {
+                    type: 'line',
+                    data: {
+                        labels: bpLabels, // <-- Use new BP-specific labels
+                        datasets: [{
+                            label: 'Systolic',
+                            data: bpSystolicData, // <-- Use new BP-specific data
+                            borderColor: 'rgb(220, 53, 69)',
+                            tension: 0.1,
+                            spanGaps: true
+                        }, {
+                            label: 'Diastolic',
+                            data: bpDiastolicData, // <-- Use new BP-specific data
+                            borderColor: 'rgb(0, 123, 255)',
+                            tension: 0.1,
+                            spanGaps: true
+                        }]
+                    }
+                });
+                
+                if(otherVitalsChartInstance) otherVitalsChartInstance.destroy();
+                otherVitalsChartInstance = new Chart(otherVitalsChartCanvas, {
+                    type: 'line',
+                    data: {
+                        labels, // <-- Use original, all-inclusive labels
+                        datasets: [{
+                            label: 'Pulse Rate (bpm)',
+                            data: prData,
+                            borderColor: 'rgb(138, 43, 226)', // <-- MODIFICATION: Changed to violet
+                            tension: 0.1,
+                            spanGaps: true
+                        }, {
+                            label: 'Resp. Rate (breaths/min)',
+                            data: rrData,
+                            borderColor: 'rgb(40, 167, 69)',
+                            tension: 0.1,
+                            spanGaps: true
+                        }, {
+                            label: 'Temp (°C)',
+                            data: tempData,
+                            borderColor: 'rgb(253, 126, 20)',
+                            tension: 0.1,
+                            spanGaps: true
+                        }, {
+                            label: 'SpO2 (%)',
+                            data: spo2Data,
+                            borderColor: 'rgb(23, 162, 184)',
+                            tension: 0.1,
+                            spanGaps: true
+                        }, {
+                            label: 'Blood Sugar', /* NEW DATASET FOR GRAPH */
+                            data: bsData,
+                            borderColor: 'rgb(255, 105, 180)', /* Pink Color */
+                            tension: 0.1,
+                            spanGaps: true
+                        }]
+                    },
+                    options: { scales: { y: { beginAtZero: false } } }
+                });
+
+
+                openModal('graph-modal');
+            }
+
+
+            // --- SUMMARY MODAL LOGIC ---
+            
+            function resetSummaryModal() {
+                summaryDateInput.value = '';
+                summaryPatientList.innerHTML = '<p>Please select a date.</p>';
+                summaryTimeList.innerHTML = '<p>Select a patient.</p>'; // Updated
+                summaryStatusDetails.innerHTML = '<p>Please select a time.</p>';
+                
+                summaryPdfBtn.style.display = 'none';
+                viewGraphBtn.style.display = 'none';
+                summaryRecord = null;
+                
+                // Reset caches and pagination
+                summaryPatientsCache = [];
+                summaryRecordsCache = [];
+                summaryPatientPage = 1;
+                summaryTimePage = 1;
+                summaryPatientPagination.style.display = 'none';
+                summaryTimePagination.style.display = 'none';
+            }
+
+            function renderSummaryPatientList() {
+                const totalPages = Math.ceil(summaryPatientsCache.length / summaryListPerPage);
+                const startIndex = (summaryPatientPage - 1) * summaryListPerPage;
+                const endIndex = startIndex + summaryListPerPage;
+                const patientsToDisplay = summaryPatientsCache.slice(startIndex, endIndex);
+
+                summaryPatientList.innerHTML = '';
+                if (patientsToDisplay.length === 0) {
+                    summaryPatientList.innerHTML = '<p>No patient records for this date.</p>';
+                } else {
+                    patientsToDisplay.forEach(patient => {
+                        const patientDiv = document.createElement('div');
+                        patientDiv.textContent = patient.name;
+                        patientDiv.className = 'summary-list-item';
+                        patientDiv.dataset.patientId = patient.id;
+                        patientDiv.dataset.date = summaryDateInput.value;
+                        summaryPatientList.appendChild(patientDiv);
+                    });
+                }
+
+                if (totalPages > 1) {
+                    summaryPatientPageInfo.textContent = `Page ${summaryPatientPage} of ${totalPages}`;
+                    summaryPatientPrevBtn.disabled = summaryPatientPage === 1;
+                    summaryPatientNextBtn.disabled = summaryPatientPage === totalPages;
+                    summaryPatientPagination.style.display = 'flex';
+                } else {
+                    summaryPatientPagination.style.display = 'none';
+                }
+            }
+
+            function renderSummaryTimeList() {
+                const totalPages = Math.ceil(summaryRecordsCache.length / summaryListPerPage);
+                const startIndex = (summaryTimePage - 1) * summaryListPerPage;
+                const endIndex = startIndex + summaryListPerPage;
+                const recordsToDisplay = summaryRecordsCache.slice(startIndex, endIndex);
+
+                summaryTimeList.innerHTML = '';
+                if (recordsToDisplay.length === 0) {
+                    summaryTimeList.innerHTML = '<p>No records for this patient on this date.</p>';
+                } else {
+                    recordsToDisplay.forEach(record => {
+                        const timeDiv = document.createElement('div');
+                        timeDiv.textContent = formatTime12Hour(record.time);
+                        timeDiv.className = 'summary-list-item';
+                        timeDiv.dataset.time = record.time; // Store the 24-hour time
+                        summaryTimeList.appendChild(timeDiv);
+                    });
+                }
+
+                if (totalPages > 1) {
+                    summaryTimePageInfo.textContent = `Page ${summaryTimePage} of ${totalPages}`;
+                    summaryTimePrevBtn.disabled = summaryTimePage === 1;
+                    summaryTimeNextBtn.disabled = summaryTimePage === totalPages;
+                    summaryTimePagination.style.display = 'flex';
+                } else {
+                    summaryTimePagination.style.display = 'none';
+                }
+            }
+
+            // --- DATA MANAGEMENT & PDF LOGIC ---
+            async function downloadJson() {
+                const patients = await getAllPatients();
+                const exportData = {
+                    patients: patients,
+                    exportedAt: new Date().toISOString()
+                };
+                
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const now = new Date();
+                const formattedDate = now.toISOString().substring(0, 10);
+                const formattedTime = now.toTimeString().substring(0, 5).replace(':', '-');
+                const filename = `patient-data-export-${formattedDate}-${formattedTime}.json`;
+
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', filename);
+                linkElement.click();
+                showNotification('Data exported successfully!', 'success');
+                closeModal('export-options-modal');
+            }
+
+            async function copyJsonData() {
+                const patients = await getAllPatients();
+                const exportData = {
+                    patients: patients,
+                    exportedAt: new Date().toISOString()
+                };
+                const dataStr = JSON.stringify(exportData, null, 2);
+
+                if (navigator.clipboard) {
+                    try {
+                        await navigator.clipboard.writeText(dataStr);
+                        showNotification('JSON data copied to clipboard!', 'success');
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                        showNotification('Failed to copy. Please try manually.', 'error');
+                    }
+                } else {
+                    const tempTextarea = document.createElement('textarea');
+                    tempTextarea.value = dataStr;
+                    document.body.appendChild(tempTextarea);
+                    tempTextarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempTextarea);
+                    showNotification('JSON data copied to clipboard!', 'success');
+                }
+                closeModal('export-options-modal');
+            }
+
+            async function importJsonData(jsonData) {
+                try {
+                    if (!jsonData) {
+                        showNotification('Please paste or upload JSON data.', 'error');
+                        return;
+                    }
+                    
+                    const importedData = JSON.parse(jsonData);
+                    
+                    if (importedData.patients && Array.isArray(importedData.patients)) {
+                        const store = getStore('readwrite');
+                        
+                        let importCount = 0;
+                        for (const patient of importedData.patients) {
+                            try {
+                                const newPatient = { ...patient, id: Date.now() + importCount };
+                                await addPatient(newPatient);
+                                importCount++;
+                            } catch (error) {
+                                console.error('Error importing patient record:', error);
+                            }
+                        }
+                        
+                        showNotification(`${importCount} patient(s) imported successfully!`, 'success');
+                        closeModal('data-management-modal');
+                        await renderPatientList();
+                    } else {
+                        showNotification('Invalid JSON format. "patients" array is missing.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error importing data:', error);
+                    showNotification('Error importing data. Please check the JSON format.', 'error');
+                }
+            }
+
+            function showNotification(message, type) {
+                const toast = document.getElementById('notification-toast');
+                toast.textContent = message;
+                toast.className = `notification-toast show ${type}`;
+                setTimeout(() => {
+                    toast.className = toast.className.replace('show', '');
+                }, 3000);
+            }
+
+            async function downloadRecordsPdf(patientId) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const patient = await getPatient(patientId);
+
+                if (!patient || !patient.records || patient.records.length === 0) {
+                    showNotification('No records to export.', 'error');
+                    return;
+                }
+
+                const now = new Date();
+                const formattedDate = now.toISOString().substring(0, 10);
+                const formattedTime = now.toTimeString().substring(0, 5).replace(':', '-');
+                const filename = `${patient.name.toLowerCase().replace(/\s/g, '-')}-records-${formattedDate}-${formattedTime}.pdf`;
+
+                doc.setFontSize(18);
+                doc.text(`Patient Vital Signs Record: ${patient.name}`, 14, 22);
+                doc.setFontSize(10);
+                doc.text(`Generated: ${now.toLocaleString()}`, 14, 28);
+
+                doc.setFontSize(12);
+                doc.text(`Age: ${patient.age} | Gender: ${patient.gender} | Birthday: ${patient.birthday}`, 14, 38);
+                
+                const tableData = patient.records.map(record => [
+                    record.date,
+                    formatTime12Hour(record.time),
+                    record.bp,
+                    record.pr,
+                    record.rr,
+                    record.temp,
+                    record.spo2,
+                    record.bloodSugar || '-' /* Added Blood Sugar to PDF Data */
+                ]);
+
+                doc.autoTable({
+                    startY: 45,
+                    /* Added Blood Sugar to PDF Header */
+                    head: [['Date', 'Time', 'BP (mmHg)', 'PR (bpm)', 'RR (breaths/min)', 'TEMP (°C)', 'SpO2 (%)', 'Blood Sugar']],
+                    body: tableData
+                });
+
+                doc.save(filename);
+                showNotification('PDF downloaded successfully!', 'success');
+            }
+
+            async function downloadSummaryPdf() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                if (!summaryRecord || !currentPatientId) {
+                    showNotification('No data to export.', 'error');
+                    return;
+                }
+
+                const patient = await getPatient(currentPatientId);
+                const record = summaryRecord;
+                
+                const now = new Date();
+                const formattedDate = now.toISOString().substring(0, 10);
+                const formattedTime = now.toTimeString().substring(0, 5).replace(':', '-');
+                const filename = `${patient.name.toLowerCase().replace(/\s/g, '-')}-summary-${formattedDate}-${formattedTime}.pdf`;
+
+
+                doc.setFontSize(18);
+                doc.text(`Vital Signs Summary for ${patient.name}`, 14, 22);
+                doc.setFontSize(10);
+                doc.text(`Generated: ${now.toLocaleString()}`, 14, 28);
+
+                let y = 35;
+                const addText = (label, value) => {
+                    doc.text(`${label}: ${value}`, 14, y);
+                    y += 10;
+                };
+
+                addText('Date', record.date);
+                addText('Time', formatTime12Hour(record.time));
+                addText('Blood Pressure', `${record.bp} mmHg`);
+                addText('Pulse Rate', `${record.pr} bpm`);
+                addText('Respiratory Rate', `${record.rr} breaths/min`);
+                addText('Temperature', `${record.temp}°C`);
+                addText('SpO2', `${record.spo2}%`);
+                addText('Blood Sugar', record.bloodSugar || '-'); /* Added Blood Sugar to Summary PDF */
+
+                doc.save(filename);
+                showNotification('PDF downloaded successfully!', 'success');
+            }
+
+            // --- ADMIN PANEL LOGIC ---
+            const getLocalISOString = (date) => {
+                const offset = date.getTimezoneOffset() * 60000;
+                const localISOTime = new Date(date.getTime() - offset).toISOString().slice(0, 16);
+                return localISOTime;
+            };
+
+            function setupAdminEventListeners() {
+                adminBtn.addEventListener('click', () => {
+                    openModal('admin-modal');
+                    adminLoginSection.style.display = 'block';
+                    adminPanelContent.style.display = 'none';
+                    adminPasswordInput.value = '';
+                });
+
+                adminLoginBtn.addEventListener('click', () => {
+                    if (adminPasswordInput.value === ADMIN_PASSWORD) {
+                        adminLoginSection.style.display = 'none';
+                        adminPanelContent.style.display = 'block';
+                        updateCountdownDisplay();
+                        timerStartDateInput.value = getLocalISOString(new Date());
+                        timerEndDateInput.value = '';
+                        checkStartProgressButton();
+                    } else {
+                        showNotification('Invalid admin password', 'error');
+                        adminPasswordInput.value = '';
+                    }
+                });
+
+                toggleDateInputsBtn.addEventListener('click', () => {
+                    const isVisible = dateInputs.style.display === 'block';
+                    dateInputs.style.display = isVisible ? 'none' : 'block';
+                    toggleDateInputsBtn.innerHTML = isVisible ? '↓' : '↑';
+                });
+
+                toggleCountdownBtn.addEventListener('click', () => {
+                    const isVisible = countdownDisplay.style.display === 'block';
+                    countdownDisplay.style.display = isVisible ? 'none' : 'block';
+                    toggleCountdownBtn.innerHTML = isVisible ? '↓' : '↑';
+                });
+
+                timerStartDateInput.addEventListener('input', () => checkStartProgressButton());
+                timerEndDateInput.value = new Date().toISOString().substring(0, 16);
+                timerEndDateInput.addEventListener('input', () => checkStartProgressButton());
+
+                startProgressBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const startDateStr = timerStartDateInput.value;
+                    const endDateStr = timerEndDateInput.value;
+                    const startDate = new Date(startDateStr);
+                    const endDate = new Date(endDateStr);
+
+                    if (!startDateStr || !endDateStr) {
+                        showNotification('Both Start and End dates are required.', 'error');
+                        return;
+                    }
+                    if (endDate <= startDate) {
+                        showNotification('End date must be after the start date.', 'error');
+                        return;
+                    }
+                    if (endDate <= new Date()) {
+                        showNotification('End date must be in the future.', 'error');
+                        return;
+                    }
+
+                    startCountdown(endDateStr);
+                    closeModal('admin-modal');
+                });
+
+                stopTimerBtn.addEventListener('click', () => {
+                    if (localStorage.getItem('appExpiration')) {
+                        if (confirm('Are you sure you want to stop the current progress?')) {
+                            stopCountdown();
+                            closeModal('admin-modal');
+                        }
+                    } else {
+                        showNotification('No progress is currently active.', 'info');
+                    }
+                });
+                
+                systemCheckBtn.addEventListener('click', () => {
+                    const status = localStorage.getItem('appStatus');
+                    let message = 'System is running smoothly. No major errors detected.';
+                    if (status === 'stopped') {
+                        message = 'System is currently inactive (frozen). This is expected if the timer has expired or you have not activated the app.';
+                    } else if (!db) {
+                        message = 'Warning: Database connection issue detected. Data may not be saving.';
+                    }
+                    showNotification(message, 'info');
+                });
+
+
+                clearDataBtn.addEventListener('click', () => {
+                    if (confirm('DANGER: Are you sure you want to permanently erase ALL records? This action cannot be undone.')) {
+                        closeModal('admin-modal');
+                        openModal('clearDataPasswordModal');
+                    }
+                });
+
+                clearDataForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const password = clearDataPasswordInput.value;
+                    if (password === ADMIN_PASSWORD) {
+                        try {
+                            await clearDatabase();
+                            closeModal('clearDataPasswordModal');
+                            showNotification('All application data has been successfully erased.', 'success');
+                            await renderPatientList();
+                            await renderRemarksTable(); // Refresh Remarks
+                        } catch (error) {
+                            console.error("Clear data error:", error);
+                            showNotification('An error occurred while clearing data.', 'error');
+                        }
+                    } else {
+                        showNotification('Incorrect password. Data deletion cancelled.', 'error');
+                    }
+                });
+            }
+
+            function checkStartProgressButton() {
+                const startDateStr = timerStartDateInput.value;
+                const endDateStr = timerEndDateInput.value;
+                startProgressBtn.disabled = !(startDateStr && endDateStr);
+            }
+
+            const startCountdown = (endDateString) => {
+                const expirationDate = new Date(endDateString);
+                localStorage.setItem('appExpiration', expirationDate.getTime());
+                localStorage.setItem('appStatus', 'running');
+                if (countdownInterval) clearInterval(countdownInterval);
+                countdownInterval = setInterval(updateCountdownDisplay, 1000);
+                updateCountdownDisplay();
+                applyUIState();
+            };
+
+            const stopCountdown = () => {
+                if (countdownInterval) clearInterval(countdownInterval);
+                localStorage.removeItem('appExpiration');
+                localStorage.setItem('appStatus', 'stopped');
+                updateCountdownDisplay();
+                applyUIState();
+            };
+
+            const updateCountdownDisplay = () => {
+                const expirationTimestamp = localStorage.getItem('appExpiration');
+
+                if (!expirationTimestamp) {
+                    countdownLabel.textContent = "No progress is active.";
+                    countdownTimerEl.textContent = "";
+                    return;
+                }
+
+                const remainingTime = parseInt(expirationTimestamp) - Date.now();
+                if (remainingTime <= 0) {
+                    countdownLabel.textContent = "PROGRESS EXPIRED & FROZEN";
+                    countdownTimerEl.textContent = "";
+                    if (localStorage.getItem('appStatus') !== 'stopped') {
+                        localStorage.setItem('appStatus', 'stopped');
+                        applyUIState();
+                    }
+                    return;
+                }
+                countdownLabel.textContent = "Progress will freeze in:";
+                const days = Math.floor(remainingTime / 86400000);
+                const hours = Math.floor((remainingTime % 86400000) / 3600000);
+                const minutes = Math.floor((remainingTime % 3600000) / 60000);
+                const seconds = Math.floor((remainingTime % 60000) / 1000);
+                countdownTimerEl.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+            };
+            
+            const freezeUI = () => {
+                document.body.classList.add('app-is-frozen');
+                headerActivateBtn.style.display = 'block'; // Show Activate Button
+            };
+
+            const unfreezeUI = () => {
+                document.body.classList.remove('app-is-frozen');
+                headerActivateBtn.style.display = 'none'; // Hide Activate Button
+            };
+
+            const applyUIState = () => {
+                if (localStorage.getItem('appStatus') === 'stopped') {
+                    freezeUI();
+                } else {
+                    unfreezeUI();
+                }
+            };
+            
+            function checkExpirationOnLoad() {
+                // If there is no status, default to stopped (Frozen) - Ensures First Open Freeze
+                if (!localStorage.getItem('appStatus')) {
+                    localStorage.setItem('appStatus', 'stopped');
+                }
+
+                const expirationDate = localStorage.getItem('appExpiration');
+                if (expirationDate) {
+                    const endDate = parseInt(expirationDate);
+                    const now = Date.now();
+                    if (now >= endDate) {
+                        localStorage.setItem('appStatus', 'stopped');
+                    } else {
+                         // Only start countdown if date is in future and status is not explicitly stopped
+                        if(localStorage.getItem('appStatus') !== 'stopped') {
+                             startCountdown(new Date(endDate).toISOString());
+                        }
+                    }
+                } else {
+                    // Force stop if no date exists (Default Freeze)
+                    localStorage.setItem('appStatus', 'stopped');
+                }
+                
+                // Apply the UI state based on the determined status
+                applyUIState();
+            }
+
+            // --- EVENT LISTENERS ---
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                if (username === 'account1' && password === 'store2025') {
+                    loginPage.style.display = 'none';
+                    appPage.style.display = 'block';
+                    
+                    checkExpirationOnLoad();
+                    // Admin button is visible but invisible to users unless they know where to click
+                    adminBtn.style.visibility = 'visible';
+                    adminBtn.style.pointerEvents = 'auto';
+                } else {
+                    loginError.textContent = 'Invalid username or password.';
+                }
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                loginPage.style.display = 'block';
+                appPage.style.display = 'none';
+                // Updated variable name
+                remarksPageSection.style.display = 'none'; // Ensure remarks page is hidden
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                adminBtn.style.visibility = 'hidden';
+                adminBtn.style.pointerEvents = 'none';
+            });
+
+            window.openModal = (modalId) => {
+                document.getElementById(modalId).style.display = 'flex';
+            };
+
+            window.closeModal = (modalId) => {
+                document.getElementById(modalId).style.display = 'none';
+            };
+
+            // NEW: Toggle visibility of main buttons
+            toggleButtonsBtn.addEventListener('click', () => {
+                if (mainButtonsContainer.style.display === 'flex') {
+                    mainButtonsContainer.style.display = 'none';
+                } else {
+                    mainButtonsContainer.style.display = 'flex';
+                }
+            });
+            
+            enterCodeBtn.addEventListener('click', () => {
+                openModal('extension-code-modal');
+            });
+
+            // MODIFICATION: Logic to use Supabase instead of local array
+            extensionCodeForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const code = extensionCodeInput.value.trim();
+
+                // Clear clipboard
+                const clearClipboard = async () => {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        try {
+                            await navigator.clipboard.writeText('');
+                        } catch (err) {}
+                    }
+                };
+                clearClipboard();
+
+                if (!code) return;
+
+                const currentStatus = localStorage.getItem('appStatus');
+                if (currentStatus !== 'stopped') {
+                    showNotification('The application is already active.', 'info');
+                    return;
+                }
+
+                // Supabase Validation Logic
+                try {
+                    // FIX: Check for code AND status = 'available'
+                    const { data, error } = await supabase
+                        .from('access_codes')
+                        .select('*')
+                        .eq('code', code)
+                        .eq('status', 'available') // Enforce available status
+                        .single();
+
+                    if (data) {
+                        // FIX: Mark as used immediately
+                        const { error: updateError } = await supabase
+                            .from('access_codes')
+                            .update({ status: 'used' })
+                            .eq('id', data.id);
+                        
+                        if (updateError) {
+                            console.error('Error updating status:', updateError);
+                            // Proceeding anyway since code was valid, but logging error
+                        }
+
+                        // Success - Code found in database
+                        const now = new Date();
+                        // Grant access for 30 days
+                        const newExpirationDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+                        localStorage.setItem('appExpiration', newExpirationDate.getTime());
+                        localStorage.setItem('appStatus', 'running');
+                        // Reset extension level tracker if used
+                        localStorage.setItem('extensionLevel', '1');
+
+                        showNotification('Access Granted Successfully!', 'success');
+                        unfreezeUI(); 
+                        startCountdown(newExpirationDate.toISOString());
+                        closeModal('extension-code-modal');
+                        extensionCodeInput.value = '';
+                    } else {
+                        // Failure - Code not found or already used
+                        console.warn('Code verification failed or code not found.');
+                        showNotification('Invalid or Expired Access Code.', 'error');
+                    }
+                } catch (err) {
+                    console.error('Supabase error:', err);
+                    showNotification('Error verifying code. Check internet connection.', 'error');
+                }
+            });
+
+
+            patientSearchInput.addEventListener('input', (e) => {
+                mainListPage = 1; 
+                const searchText = e.target.value;
+                renderPatientList(searchText);
+            });
+
+            // Main List Pagination Listeners
+            mainPrevBtn.addEventListener('click', () => {
+                if (mainListPage > 1) {
+                    mainListPage--;
+                    renderPatientList(patientSearchInput.value);
+                }
+            });
+
+            mainNextBtn.addEventListener('click', async () => {
+                const patients = await getAllPatients();
+                const filteredPatients = patients.filter(patient =>
+                    patient.name.toLowerCase().includes(patientSearchInput.value.toLowerCase())
+                );
+                const totalPages = Math.ceil(filteredPatients.length / mainListPerPage);
+
+                if (mainListPage < totalPages) {
+                    mainListPage++;
+                    renderPatientList(patientSearchInput.value);
+                }
+            });
+
+
+            registerBtn.addEventListener('click', () => {
+                vitalsSaveBtn.textContent = 'Save';
+                openModal('register-modal');
+            });
+
+            summaryBtn.addEventListener('click', () => {
+                resetSummaryModal();
+                openModal('summary-modal');
+            });
+
+            viewProfileBtn.addEventListener('click', async () => {
+                patientsCache = await getAllPatients();
+                currentPage = 1;
+                renderProfileList();
+                openModal('profile-modal');
+                showProfileListSection();
+            });
+
+            dataManagementBtn.addEventListener('click', () => {
+                openModal('data-management-modal');
+                importSection.style.display = 'none';
+            });
+            
+            // --- REMARKS NAVIGATION & LOGIC ---
+            
+            // Auto-Capitalization for Remarks Input
+            function autoCapitalize(element) {
+                element.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    if (val.length > 0) {
+                        e.target.value = val.charAt(0).toUpperCase() + val.slice(1);
+                    }
+                });
+            }
+            autoCapitalize(remarksTitleInput);
+            autoCapitalize(remarksContentInput);
+
+            remarksNavBtn.addEventListener('click', async () => {
+                appPage.style.display = 'none';
+                remarksPageSection.style.display = 'block';
+                await renderRemarksTable();
+            });
+
+            backToDashboardBtn.addEventListener('click', () => {
+                remarksPageSection.style.display = 'none';
+                appPage.style.display = 'block';
+            });
+
+            addRemarksBtn.addEventListener('click', () => {
+                document.getElementById('remarks-modal-title').textContent = "Add Remarks";
+                remarksForm.reset();
+                document.getElementById('remarks-id').value = '';
+                remarksSaveBtn.textContent = 'Save';
+                openModal('remarks-modal');
+            });
+
+            remarksForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                remarksSaveBtn.disabled = true;
+
+                const id = document.getElementById('remarks-id').value;
+                const title = document.getElementById('remarks-title').value;
+                const content = document.getElementById('remarks-content').value;
+
+                if (id) {
+                    // Update existing
+                    const existingRemark = await getRemark(parseInt(id));
+                    existingRemark.title = title;
+                    existingRemark.content = content;
+                    // Keep original date and status
+                    await updateRemark(existingRemark);
+                    showNotification('Remark updated successfully.', 'success');
+                } else {
+                    // Create new
+                    const newRemark = {
+                        title: title,
+                        content: content,
+                        date: new Date().toISOString(),
+                        status: 'Pending'
+                    };
+                    await addRemark(newRemark);
+                    showNotification('Remark added successfully.', 'success');
+                }
+
+                closeModal('remarks-modal');
+                await renderRemarksTable();
+                remarksSaveBtn.disabled = false;
+            });
+            
+            // Remarks List Event Delegation (Edit, Done, Delete, View)
+            remarksTableBody.addEventListener('click', async (e) => {
+                 const target = e.target;
+                 
+                 // Handle Button Clicks first
+                 if (target.classList.contains('delete-remark-btn')) {
+                     const remarkId = parseInt(target.dataset.id);
+                     if (confirm('Are you sure you want to delete this remark?')) {
+                         await deleteRemark(remarkId);
+                         await renderRemarksTable();
+                         showNotification('Remark deleted.', 'success');
+                     }
+                     return;
+                 }
+                 
+                 if (target.classList.contains('done-remark-btn')) {
+                     const remarkId = parseInt(target.dataset.id);
+                     const remark = await getRemark(remarkId);
+                     remark.status = 'Done';
+                     await updateRemark(remark);
+                     await renderRemarksTable();
+                     showNotification('Remark marked as done.', 'success');
+                     return;
+                 }
+                 
+                 // NEW UNDO LOGIC
+                 if (target.classList.contains('undo-remark-btn')) {
+                     const remarkId = parseInt(target.dataset.id);
+                     const remark = await getRemark(remarkId);
+                     remark.status = 'Pending'; // Revert to Pending
+                     await updateRemark(remark);
+                     await renderRemarksTable();
+                     showNotification('Remark status reset to Pending.', 'success');
+                     return;
+                 }
+
+                 if (target.classList.contains('edit-remark-btn')) {
+                     const remarkId = parseInt(target.dataset.id);
+                     const remark = await getRemark(remarkId);
+                     document.getElementById('remarks-id').value = remark.id;
+                     document.getElementById('remarks-title').value = remark.title;
+                     document.getElementById('remarks-content').value = remark.content;
+                     
+                     document.getElementById('remarks-modal-title').textContent = "Edit Remarks";
+                     remarksSaveBtn.textContent = 'Update';
+                     openModal('remarks-modal');
+                     return;
+                 }
+                 
+                 // Handle Row Click for Viewing (If not clicking a button)
+                 const row = target.closest('tr');
+                 if (row) {
+                     const remarkId = parseInt(row.dataset.id);
+                     const remark = await getRemark(remarkId);
+                     if(remark) {
+                         viewRemarkTitle.textContent = remark.title;
+                         const d = new Date(remark.date);
+                         viewRemarkDate.textContent = `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                         viewRemarkStatus.textContent = `Status: ${remark.status}`;
+                         viewRemarkContent.textContent = remark.content;
+                         openModal('view-remark-modal');
+                     }
+                 }
+            });
+            
+            // Remarks Pagination
+            remarksPrevBtn.addEventListener('click', () => {
+                if (remarksPage > 1) {
+                    remarksPage--;
+                    renderRemarksTable();
+                }
+            });
+
+            remarksNextBtn.addEventListener('click', async () => {
+                const remarks = await getAllRemarks();
+                const totalPages = Math.ceil(remarks.length / remarksPerPage);
+                if (remarksPage < totalPages) {
+                    remarksPage++;
+                    renderRemarksTable();
+                }
+            });
+            
+            
+            exportBtn.addEventListener('click', () => {
+                closeModal('data-management-modal');
+                openModal('export-options-modal');
+                const downloadExportBtn = document.getElementById('download-export-btn');
+                const copyExportBtn = document.getElementById('copy-export-btn');
+                if(downloadExportBtn) downloadExportBtn.addEventListener('click', downloadJson);
+                if(copyExportBtn) copyExportBtn.addEventListener('click', copyJsonData);
+            });
+
+            importBtn.addEventListener('click', () => {
+                importSection.style.display = 'block';
+                const confirmImportBtn = document.getElementById('confirm-import-btn');
+                const importCancelBtn = document.getElementById('import-cancel-btn');
+                const importFile = document.getElementById('import-file');
+                if(confirmImportBtn) confirmImportBtn.addEventListener('click', () => {
+                    importJsonData(importJsonDataTextarea.value);
+                });
+                if(importCancelBtn) importCancelBtn.addEventListener('click', () => {
+                    importSection.style.display = 'none';
+                    importJsonDataTextarea.value = '';
+                    importFile.value = '';
+                });
+                if(importFile) importFile.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            try {
+                                const jsonData = event.target.result;
+                                importJsonDataTextarea.value = jsonData;
+                            } catch (error) {
+                                showNotification('Failed to read file.', 'error');
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                });
+            });
+
+            summaryPdfBtn.addEventListener('click', downloadSummaryPdf);
+            viewGraphBtn.addEventListener('click', renderVitalsGraph);
+
+
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderProfileList();
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(patientsCache.length / patientsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderProfileList();
+                }
+            });
+
+            backToListBtn.addEventListener('click', () => {
+                showProfileListSection();
+            });
+
+            deletePatientBtn.addEventListener('click', async () => {
+                if (currentPatientId && confirm('Are you sure you want to delete this patient and all their records? This action cannot be undone.')) {
+                    await deletePatient(currentPatientId);
+                    await renderPatientList();
+                    patientsCache = await getAllPatients();
+                    showProfileListSection();
+                    showNotification('Patient deleted successfully.', 'success');
+                }
+            });
+
+            patientListDiv.addEventListener('click', async (e) => {
+                const target = e.target;
+                const patientItem = target.closest('.patient-item');
+                const patientId = patientItem ? parseInt(patientItem.querySelector('.patient-name').dataset.id) : null;
+                const recordsDiv = patientItem ? patientItem.querySelector('.patient-records') : null;
+                if (target.closest('.patient-name')) {
+                    const actionsDiv = target.closest('.patient-name').nextElementSibling;
+                    actionsDiv.style.display = actionsDiv.style.display === 'flex' ? 'none' : 'flex';
+                    if (recordsDiv && recordsDiv.style.display === 'block') {
+                        recordsDiv.style.display = 'none';
+                        patientItem.querySelector('.show-records-btn').textContent = 'Show Records';
+                        patientItem.querySelector('.show-records-btn').classList.remove('hide-records-btn');
+                    }
+                }
+                if (target.classList.contains('input-vitals-btn')) {
+                    const patient = await getPatient(patientId);
+                    document.getElementById('vitals-patient-name').textContent = `Input Vital Signs for ${patient.name}`;
+                    document.getElementById('vitals-patient-id').value = patient.id;
+                    document.getElementById('vitals-record-index').value = '';
+                    vitalsSaveBtn.textContent = 'Save';
+                    
+                    // --- VITAL SIGNS INPUT CONNECTION LOGIC ---
+                    // This uses the current time for the modal, ensuring it matches the live clock
+                    const now = new Date();
+                    document.getElementById('vitals-date').valueAsDate = now;
+                    document.getElementById('vitals-time').value = now.toTimeString().substring(0, 5);
+                    
+                    vitalsForm.reset();
+                    // Resetting form clears inputs, so we re-apply the date/time
+                    document.getElementById('vitals-date').value = now.toISOString().substring(0,10);
+                    document.getElementById('vitals-time').value = now.toTimeString().substring(0, 5);
+                    openModal('vitals-modal');
+                }
+                if (target.classList.contains('show-records-btn')) {
+                    const isShowing = target.classList.contains('hide-records-btn');
+                    if (isShowing) {
+                        recordsDiv.style.display = 'none';
+                        target.textContent = 'Show Records';
+                        target.classList.remove('hide-records-btn');
+                    } else {
+                        await renderRecordsGrid(patientId, recordsDiv, 1);
+                        recordsDiv.style.display = 'block';
+                        target.textContent = 'Hide Records';
+                        target.classList.add('hide-records-btn');
+                    }
+                }
+                if (target.classList.contains('records-prev-btn')) {
+                    const currentRecordPage = recordPages[patientId] || 1;
+                    if (currentRecordPage > 1) {
+                        await renderRecordsGrid(patientId, recordsDiv, currentRecordPage - 1);
+                    }
+                }
+                if (target.classList.contains('records-next-btn')) {
+                    const currentRecordPage = recordPages[patientId] || 1;
+                    await renderRecordsGrid(patientId, recordsDiv, currentRecordPage + 1);
+                }
+                if (target.classList.contains('records-pdf-btn')) {
+                    const patientId = parseInt(target.dataset.id);
+                    await downloadRecordsPdf(patientId);
+                }
+                if (target.classList.contains('edit-vital-btn')) {
+                    const patient = await getPatient(parseInt(target.dataset.patientId));
+                    const recordIndex = parseInt(target.dataset.index);
+                    const record = patient.records[recordIndex];
+                    document.getElementById('vitals-patient-name').textContent = `Edit Vital Signs for ${patient.name}`;
+                    document.getElementById('vitals-patient-id').value = patient.id;
+                    document.getElementById('vitals-record-index').value = recordIndex;
+                    vitalsSaveBtn.textContent = 'Update';
+                    document.getElementById('vitals-date').value = record.date;
+                    document.getElementById('vitals-time').value = record.time;
+                    document.getElementById('vitals-bp').value = record.bp;
+                    document.getElementById('vitals-pr').value = record.pr;
+                    document.getElementById('vitals-rr').value = record.rr;
+                    document.getElementById('vitals-temp').value = record.temp;
+                    document.getElementById('vitals-spo2').value = record.spo2;
+                    // Populate Blood Sugar
+                    document.getElementById('vitals-bs').value = record.bloodSugar || '';
+                    openModal('vitals-modal');
+                }
+                if (target.classList.contains('delete-vital-btn')) {
+                    const patientId = parseInt(target.dataset.patientId);
+                    const recordIndex = parseInt(target.dataset.index);
+                    if (confirm('Are you sure you want to delete this vital sign record?')) {
+                        const patient = await getPatient(patientId);
+                        patient.records.splice(recordIndex, 1);
+                        await updatePatient(patient);
+                        await renderRecordsGrid(patientId, recordsDiv, recordPages[patientId]);
+                        showNotification('Vital sign record deleted.', 'success');
+                    }
+                }
+            });
+            vitalsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                vitalsSaveBtn.disabled = true;
+                const patientId = parseInt(document.getElementById('vitals-patient-id').value);
+                const recordIndex = document.getElementById('vitals-record-index').value;
+                const recordDate = document.getElementById('vitals-date').value;
+                const recordTime = document.getElementById('vitals-time').value;
+
+                const patient = await getPatient(patientId);
+
+                // Check for duplicate time registration
+                const isDuplicate = patient.records.some((record, index) => {
+                    const isSameDateTime = record.date === recordDate && record.time === recordTime;
+                    // If we are editing, we ignore the record at the original index
+                    const isDifferentRecord = recordIndex === '' || index !== parseInt(recordIndex);
+                    return isSameDateTime && isDifferentRecord;
+                });
+
+                if (isDuplicate) {
+                    showNotification('A record for this date and time already exists.', 'error');
+                    vitalsSaveBtn.disabled = false;
+                    return;
+                }
+
+                const newRecord = {
+                    date: recordDate,
+                    time: recordTime,
+                    bp: document.getElementById('vitals-bp').value,
+                    pr: document.getElementById('vitals-pr').value,
+                    rr: document.getElementById('vitals-rr').value,
+                    temp: document.getElementById('vitals-temp').value,
+                    spo2: document.getElementById('vitals-spo2').value,
+                    // Save Blood Sugar
+                    bloodSugar: document.getElementById('vitals-bs').value,
+                };
+                if (recordIndex === '') {
+                    patient.records.push(newRecord);
+                } else {
+                    patient.records[parseInt(recordIndex)] = newRecord;
+                }
+                await updatePatient(patient);
+                recordPages[patientId] = 1;
+                const recordsDiv = document.querySelector(`.show-records-btn[data-id='${patientId}']`).closest('.patient-actions').nextElementSibling;
+                if(recordsDiv.style.display === 'block'){
+                    await renderRecordsGrid(patientId, recordsDiv, 1);
+                }
+                closeModal('vitals-modal');
+                vitalsForm.reset();
+                vitalsSaveBtn.disabled = false;
+            });
+
+
+            // --- Registration Form Logic ---
+            regNameInput.addEventListener('input', (e) => {
+                const value = e.target.value;
+                if (value.length > 0) {
+                    e.target.value = value.charAt(0).toUpperCase() + value.slice(1);
+                }
+            });
+
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const age = parseInt(regAgeInput.value);
+                if (isNaN(age) || age < 18) {
+                    showNotification('Age must be 18 or older.', 'error');
+                    return;
+                }
+
+                regSaveBtn.disabled = true;
+                const newPatient = {
+                    id: Date.now(),
+                    name: regNameInput.value,
+                    gender: document.getElementById('reg-gender').value,
+                    age: age,
+                    birthday: document.getElementById('reg-birthday').value,
+                    records: []
+                };
+                await addPatient(newPatient);
+                await renderPatientList();
+                closeModal('register-modal');
+                registerForm.reset();
+                regSaveBtn.disabled = false;
+            });
+
+            // Summary Modal Listeners with Pagination
+            summaryDateInput.addEventListener('change', async () => {
+                const selectedDate = summaryDateInput.value;
+                
+                // Reset downstream lists and pagination
+                summaryTimeList.innerHTML = '<p>Select a patient.</p>';
+                summaryTimePagination.style.display = 'none';
+                summaryStatusDetails.innerHTML = '<p>Please select a time.</p>';
+                summaryPdfBtn.style.display = 'none';
+                viewGraphBtn.style.display = 'none';
+                summaryRecord = null;
+                summaryPatientPage = 1;
+                summaryTimePage = 1;
+
+                const allPatients = await getAllPatients();
+                // Filter and cache the full list of patients for this date
+                summaryPatientsCache = allPatients
+                    .filter(p => p.records.some(r => r.date === selectedDate))
+                    .sort((a, b) => a.name.localeCompare(b.name)); // Sort them alphabetically
+                
+                // Render the first page
+                renderSummaryPatientList();
+            });
+
+            summaryPatientList.addEventListener('click', async (e) => {
+                if(e.target.classList.contains('summary-list-item')) {
+                    // Highlight selected patient
+                    document.querySelectorAll('#summary-patient-list .summary-list-item').forEach(el => el.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    
+                    // Reset downstream lists and pagination
+                    summaryStatusDetails.innerHTML = '<p>Please select a time.</p>';
+                    summaryPdfBtn.style.display = 'none';
+                    viewGraphBtn.style.display = 'none';
+                    summaryRecord = null;
+                    summaryTimePage = 1;
+
+                    const patientId = parseInt(e.target.dataset.patientId);
+                    const selectedDate = e.target.dataset.date;
+                    const patient = await getPatient(patientId);
+                    
+                    // Filter and cache the full list of records
+                    summaryRecordsCache = patient.records
+                        .filter(r => r.date === selectedDate)
+                        .sort((a, b) => a.time.localeCompare(b.time)); // Sort by time
+
+                    // Store patient ID and date for the time list to use
+                    summaryTimeList.dataset.patientId = patientId;
+                    summaryTimeList.dataset.date = selectedDate;
+
+                    // Render the first page of times
+                    renderSummaryTimeList();
+                }
+            });
+
+            summaryTimeList.addEventListener('click', async (e) => {
+                if(e.target.classList.contains('summary-list-item')) {
+                    // Highlight selected time
+                    document.querySelectorAll('#summary-time-list .summary-list-item').forEach(el => el.classList.remove('selected'));
+                    e.target.classList.add('selected');
+
+                    const patientId = parseInt(summaryTimeList.dataset.patientId);
+                    const selectedDate = summaryTimeList.dataset.date;
+                    const selectedTime = e.target.dataset.time; // Get time from data attribute
+
+                    if (!selectedTime) {
+                        summaryStatusDetails.innerHTML = '<p>Please select a time.</p>';
+                        summaryPdfBtn.style.display = 'none';
+                        viewGraphBtn.style.display = 'none';
+                        summaryRecord = null;
+                        return;
+                    }
+                    
+                    const patient = await getPatient(patientId);
+                    const record = patient.records.find(r => r.date === selectedDate && r.time === selectedTime);
+                    summaryRecord = record;
+                    currentPatientId = patientId;
+                    
+                    // Pass data to the hidden dropdown dataset for the "View Graph" button
+                    summaryTimeDropdown.dataset.patientId = patientId;
+                    summaryTimeDropdown.dataset.date = selectedDate;
+                    
+                    summaryPdfBtn.style.display = 'block';
+                    viewGraphBtn.style.display = 'block';
+
+                    let vitalEvaluationsHTML = '';
+                    if (patient.age >= 18) {
+                        const bpEvaluation = getBPStatus(record.bp);
+                        const prEval = getVitalStatus('PR', record.pr);
+                        const rrEval = getVitalStatus('RR', record.rr);
+                        const tempEval = getVitalStatus('TEMP', record.temp);
+                        const spo2Eval = getVitalStatus('SpO2', record.spo2);
+                        vitalEvaluationsHTML = `
+                            <div class="bp-result-display ${bpEvaluation.color}">
+                                <p><strong>BP: ${record.bp} mmHg (${bpEvaluation.level})</strong></p>
+                                <p><small>${bpEvaluation.desc}</small></p>
+                                ${bpEvaluation.note ? `<p class="vital-note">${bpEvaluation.note}</p>` : ''}
+                            </div>
+                            <div class="vital-evaluation-grid">
+                                <div class="vital-row ${prEval.colorClass}">
+                                    <span><strong>PR:</strong> ${record.pr} bpm</span>
+                                    <div>
+                                        <strong>${prEval.status}</strong>
+                                        ${prEval.note ? `<p class="vital-note">${prEval.note}</p>` : ''}
+                                    </div>
+                                </div>
+                                <div class="vital-row ${rrEval.colorClass}">
+                                    <span><strong>RR:</strong> ${record.rr} breaths/min</span>
+                                    <div>
+                                        <strong>${rrEval.status}</strong>
+                                        ${rrEval.note ? `<p class="vital-note">${rrEval.note}</p>` : ''}
+                                    </div>
+                                </div>
+                                <div class="vital-row ${tempEval.colorClass}">
+                                    <span><strong>TEMP:</strong> ${record.temp}°C</span>
+                                    <div>
+                                        <strong>${tempEval.status}</strong>
+                                        ${tempEval.note ? `<p class="vital-note">${tempEval.note}</p>` : ''}
+                                    </div>
+                                </div>
+                                <div class="vital-row ${spo2Eval.colorClass}">
+                                    <span><strong>SpO2:</strong> ${record.spo2}%</span>
+                                    <div>
+                                        <strong>${spo2Eval.status}</strong>
+                                        ${spo2Eval.note ? `<p class="vital-note">${spo2Eval.note}</p>` : ''}
+                                    </div>
+                                </div>
+                                <div class="vital-row">
+                                    <span><strong>Blood Sugar:</strong> ${record.bloodSugar || '-'}</span>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        vitalEvaluationsHTML = `
+                            <p><strong>BP:</strong> ${record.bp} mmHg</p>
+                            <p><strong>PR:</strong> ${record.pr} bpm</p>
+                            <p><strong>RR:</strong> ${record.rr} breaths/min</p>
+                            <p><strong>TEMP:</strong> ${record.temp}°C</p>
+                            <p><strong>SpO2:</strong> ${record.spo2}%</p>
+                            <p><strong>Blood Sugar:</strong> ${record.bloodSugar || '-'}</p> <p style="font-size: 0.8em; color: var(--secondary-color); margin-top: 10px;">Automatic evaluation is only available for patients 18 years and older.</p>
+                        `;
+                    }
+                    summaryStatusDetails.innerHTML = `<p><strong>Patient:</strong> ${patient.name} (Age: ${patient.age})</p><hr>${vitalEvaluationsHTML}`;
+                }
+            });
+
+            summaryPatientPrevBtn.addEventListener('click', () => {
+                if (summaryPatientPage > 1) {
+                    summaryPatientPage--;
+                    renderSummaryPatientList();
+                }
+            });
+
+            summaryPatientNextBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(summaryPatientsCache.length / summaryListPerPage);
+                if (summaryPatientPage < totalPages) {
+                    summaryPatientPage++;
+                    renderSummaryPatientList();
+                }
+            });
+
+            summaryTimePrevBtn.addEventListener('click', () => {
+                if (summaryTimePage > 1) {
+                    summaryTimePage--;
+                    renderSummaryTimeList();
+                }
+            });
+
+            summaryTimeNextBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(summaryRecordsCache.length / summaryListPerPage);
+                if (summaryTimePage < totalPages) {
+                    summaryTimePage++;
+                    renderSummaryTimeList();
+                }
+            });
+            // END OF MODIFICATION
+
+            // --- INITIALIZE APP ---
+            try {
+                await initDB();
+                await renderPatientList();
+                checkExpirationOnLoad();
+                setupAdminEventListeners();
+            } catch (error) {
+                console.error('Application failed to initialize:', error);
+                alert('Error: Could not connect to the database. Data will not be saved. Please ensure you are not in private browsing mode.');
+            }
+        });
+    </script>
+
+</body>
+</html>
