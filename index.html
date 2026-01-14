@@ -1672,45 +1672,7 @@
             function seedDatabase() {
                 const transaction = db.transaction([STORE_NAME], 'readwrite');
                 const store = transaction.objectStore(STORE_NAME);
-                const johnWithRecords = {
-                    id: 1,
-                    name: "",
-                    gender: "Male",
-                    age: 35,
-                    birthday: "1988-05-15",
-                    records: [{
-                        date: "2025-09-13",
-                        time: "18:00",
-                        bp: "120/80",
-                        pr: 75,
-                        rr: 16,
-                        temp: 36.8,
-                        spo2: 98
-                    },
-                    {
-                        date: "2025-09-13",
-                        time: "12:00",
-                        bp: "150/95",
-                        pr: 88,
-                        rr: 21,
-                        temp: 37.9,
-                        spo2: 94
-                    },
-                    {
-                        date: "2025-09-12",
-                        time: "08:30",
-                        bp: "105/65",
-                        pr: 62,
-                        rr: 14,
-                        temp: 36.5,
-                        spo2: 99
-                    }]
-                };
-                const addJohnRequest = store.add(johnWithRecords);
-                addJohnRequest.onerror = (event) => {
-                    console.error('Error adding seeded data:', event.target.error);
-                };
-            }
+                
 
             // --- DATABASE CRUD WRAPPERS ---
             function getStore(mode, storeName = STORE_NAME) {
@@ -3443,4 +3405,5 @@
 </body>
 
 </html>
+
 
