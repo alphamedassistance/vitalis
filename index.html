@@ -1656,9 +1656,7 @@
                         const store = transaction.objectStore(STORE_NAME);
                         const countRequest = store.count();
                         countRequest.onsuccess = () => {
-                            if (countRequest.result === 0) {
-                                seedDatabase();
-                            }
+                            // No default patient
                             resolve(db);
                         };
                         countRequest.onerror = (e) => {
@@ -3442,6 +3440,7 @@
 </body>
 
 </html>
+
 
 
 
