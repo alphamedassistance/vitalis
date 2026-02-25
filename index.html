@@ -2726,79 +2726,71 @@
             enterCodeBtn.addEventListener('click', () => {
                 openModal('extension-code-modal');
             });
+// The new "Black Box" Verification with Debugging
+extensionCodeForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userInput = extensionCodeInput.value.trim().toUpperCase();
 
-            // MODIFICATION: Logic to use Supabase instead of local array
-            extensionCodeForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const code = extensionCodeInput.value.trim();
+    if (!userInput) {
+        showNotification("Please enter an access code.", "error");
+        return;
+    }
 
-                // Clear clipboard
-                const clearClipboard = async () => {
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        try {
-                            await navigator.clipboard.writeText('');
-                        } catch (err) {}
-                    }
-                };
-                clearClipboard();
+    try {
+        // Disable button to prevent double-clicks
+        const submitBtn = extensionCodeForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Verifying...";
 
-                if (!code) return;
+        // Call the secure database function
+        const { data, error } = await supabase
+            .rpc('verify_and_burn_code', { input_code: userInput });
 
-                const currentStatus = localStorage.getItem('appStatus');
-                if (currentStatus !== 'stopped') {
-                    showNotification('The application is already active.', 'info');
-                    return;
-                }
+        // 🐛 DEBUGGING LINES:
+        console.log("Supabase Data:", data);
+        console.log("Supabase Error:", error);
 
-                // Supabase Validation Logic
-                try {
-                    // FIX: Check for code AND status = 'available'
-                    const { data, error } = await supabase
-                        .from('access_codes')
-                        .select('*')
-                        .eq('code', code)
-                        .eq('status', 'available') // Enforce available status
-                        .single();
+        if (error || !data || data.length === 0) {
+            showNotification("Invalid or expired Access Code.", "error");
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit Code";
+            extensionCodeInput.value = ''; // clear input
+            return;
+        }
 
-                    if (data) {
-                        // FIX: Mark as used immediately
-                        const { error: updateError } = await supabase
-                            .from('access_codes')
-                            .update({ status: 'used' })
-                            .eq('id', data.id);
-                        
-                        if (updateError) {
-                            console.error('Error updating status:', updateError);
-                            // Proceeding anyway since code was valid, but logging error
-                        }
+        // Success! Code was valid and is now burned.
+        console.log("Access Granted. ID:", data[0].id);
+        
+        const now = new Date();
+        const newExpirationDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-                        // Success - Code found in database
-                        const now = new Date();
-                        // Grant access for 30 days
-                        const newExpirationDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        localStorage.setItem('appExpiration', newExpirationDate.getTime());
+        localStorage.setItem('appStatus', 'running');
+        localStorage.setItem('extensionLevel', '1');
 
-                        localStorage.setItem('appExpiration', newExpirationDate.getTime());
-                        localStorage.setItem('appStatus', 'running');
-                        // Reset extension level tracker if used
-                        localStorage.setItem('extensionLevel', '1');
+        showNotification('Access Granted Successfully!', 'success');
+        
+        // Remove freeze effect and close modal
+        document.body.classList.remove('app-is-frozen');
+        document.getElementById('header-activate-btn').style.display = 'none';
+        
+        // Start the countdown timer visually
+        startCountdown(newExpirationDate.toISOString());
+        
+        closeModal('extension-code-modal');
+        extensionCodeInput.value = '';
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit Code";
 
-                        showNotification('Access Granted Successfully!', 'success');
-                        unfreezeUI(); 
-                        startCountdown(newExpirationDate.toISOString());
-                        closeModal('extension-code-modal');
-                        extensionCodeInput.value = '';
-                    } else {
-                        // Failure - Code not found or already used
-                        console.warn('Code verification failed or code not found.');
-                        showNotification('Invalid or Expired Access Code.', 'error');
-                    }
-                } catch (err) {
-                    console.error('Supabase error:', err);
-                    showNotification('Error verifying code. Check internet connection.', 'error');
-                }
-            });
-
-
+    } catch (err) {
+        console.error("Verification error:", err);
+        showNotification("Connection error. Please try again.", "error");
+        const submitBtn = extensionCodeForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit Code";
+    }
+        });
+            
             patientSearchInput.addEventListener('input', (e) => {
                 mainListPage = 1; 
                 const searchText = e.target.value;
@@ -3440,7 +3432,3 @@
 </body>
 
 </html>
-
-
-
-
