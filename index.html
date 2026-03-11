@@ -248,6 +248,8 @@
             background-color: transparent !important;
             color: transparent !important;
             border: none !important;
+            text-indent: -9999px; /* Bulletproof fix: pushes text off-screen permanently */
+            overflow: hidden;
             padding: 12px 20px;
             cursor: pointer;
         }
@@ -793,8 +795,8 @@
         }
         
         /* --- Enhanced Freeze Effect Styles --- */
-        /* Freezes everything in app page AND remarks page EXCEPT header */
-        body.app-is-frozen #app-page > *:not(header),
+        /* Freezes everything in app page AND remarks page EXCEPT header and dashboard */
+        body.app-is-frozen #app-page > *:not(header):not(#dashboard-container):not(#dashboard-overlay),
         body.app-is-frozen #remarks-page > *:not(header) {
             pointer-events: none;
             filter: grayscale(80%) opacity(0.6);
@@ -811,6 +813,19 @@
         body.app-is-frozen #extension-code-modal .modal-content {
             border: 2px solid var(--primary-color);
             box-shadow: 0 0 20px rgba(0, 123, 255, 0.5);
+        }
+
+        /* Freeze all dashboard buttons EXCEPT Log Out */
+        body.app-is-frozen #dashboard-container .dash-card:not(#logout-btn) {
+            pointer-events: none;
+            filter: grayscale(80%) opacity(0.6);
+        }
+
+        /* Guarantee Log Out is completely clickable and visible in freeze mode */
+        body.app-is-frozen #logout-btn {
+            pointer-events: auto !important;
+            filter: none !important;
+            opacity: 1 !important;
         }
 
         /* --- PWA Install Button Styles --- */
@@ -2860,10 +2875,10 @@
             });
 
             logoutBtn.addEventListener('click', () => {
+                closeDashboard(); /* Closes the dashboard panel upon logging out */
                 loginPage.style.display = 'block';
                 appPage.style.display = 'none';
-                // Updated variable name
-                remarksPageSection.style.display = 'none'; // Ensure remarks page is hidden
+                remarksPageSection.style.display = 'none';
                 document.getElementById('username').value = '';
                 document.getElementById('password').value = '';
                 adminBtn.style.visibility = 'hidden';
