@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vitalis-v1-cache';
+const CACHE_NAME = 'vitalis-v2-cache'; // Or v1.1, v1.2, etc.
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -77,4 +77,5 @@ self.addEventListener('fetch', (event) => {
       });
     })
   );
+
 });
