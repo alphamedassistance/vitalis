@@ -136,11 +136,30 @@
             flex-wrap: wrap;
         }
 
-        header h1 {
+       header h1 {
             margin: 0;
             font-size: 1.5em;
         }
 
+        /* --- HEADER TITLE ALIGNMENT --- */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Controls the space between the 3 lines and the title */
+        }
+
+        header .hamburger-btn {
+            color: white !important; /* Overrides the primary-color so it's visible on the blue background */
+            margin: 0;
+            padding: 5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+            align-items: center;
+        }
         .header-actions {
             display: flex;
             gap: 10px;
@@ -822,7 +841,102 @@
              background-color: #f0f0f0;
         }
 
+       /* --- SLIDING DASHBOARD STYLES --- */
+        #dashboard-overlay {
+            position: fixed;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            display: none;
+        }
 
+        #dashboard-overlay.show { 
+            display: block; 
+        }
+
+        #dashboard-container {
+            position: fixed;
+            top: 0;
+            left: -320px; /* Hidden off-screen by default */
+            width: 300px;
+            height: 100vh;
+            background-color: var(--container-bg);
+            z-index: 2000;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+            transition: left 0.3s ease-in-out;
+            margin: 0;
+            padding: 20px;
+            border-radius: 0;
+            overflow-y: auto;
+        }
+
+        #dashboard-container.open {
+            left: 0; /* Slide in to view */
+        }
+
+        #dashboard-container h2 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            color: var(--primary-color);
+            font-size: 1.5em;
+        }
+
+        #close-dashboard-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            color: var(--secondary-color);
+            padding: 5px;
+        }
+
+        #close-dashboard-btn:hover { 
+            color: var(--danger-color); 
+        }
+
+        .dashboard-grid {
+            display: flex;
+            flex-direction: column; /* Stack buttons vertically */
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .dash-card {
+            background-color: var(--background-color);
+            color: var(--font-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-weight: bold;
+            display: flex;
+            flex-direction: row; /* Icon and text side-by-side */
+            align-items: center;
+            justify-content: flex-start;
+            padding: 15px 20px;
+            gap: 15px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            width: 100%; /* Ensure they stretch full width of the drawer */
+        }
+
+        .dash-card:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateX(5px); /* Slide right slightly on hover */
+            border-color: var(--primary-color);
+        }
+
+        .dash-card .icon {
+            font-size: 1.8em;
+        }
         /* Mobile-first Media Queries */
         @media (max-width: 575px) {
             #login-page h1 {
@@ -837,10 +951,6 @@
                 justify-content: space-between;
                 margin-top: 10px;
                 flex-wrap: wrap;
-            }
-            #logout-btn {
-                padding: 8px 16px;
-                font-size: 14px;
             }
             .button-container {
                 justify-content: center;
@@ -955,28 +1065,67 @@
         </div>
 
     <div id="app-page">
-        <header>
-            <h1>Vitalis ver. 1.0</h1>
+        <!-- Dashboard Overlay -->
+        <div id="dashboard-overlay"></div>
+
+        <header class="top-nav">
+            <!-- Grouped Dashboard Button and App Label -->
+            <div class="header-left">
+                <!-- The 3 Lines Button -->
+                <button id="toggle-buttons-btn" class="hamburger-btn" aria-label="Open Dashboard">
+                    &#9776;
+                </button>
+                <!-- The App Label -->
+                <h1 class="app-label">VITALIS VER. 1.0</h1>
+            </div>
+
             <div class="header-actions">
                 <button id="pwa-header-btn">Install App</button>
                 <button id="header-activate-btn" onclick="openModal('extension-code-modal')">Activate App</button>
-                
                 <button class="btn btn-info" id="admin-btn">Admin</button>
-                <button class="secondary" id="logout-btn">Log Out</button>
             </div>
         </header>
 
-        <div class="button-container" id="main-buttons-container" style="display:none;">
-            <button id="register-btn">Register Patient</button>
-            <button id="view-profile-btn">View Patient Profile</button>
-            <button id="summary-btn">Summary of Status</button>
-            <button id="remarks-nav-btn">Remarks</button> <button id="data-management-btn">Data Management</button>
+        <!-- New Sliding Dashboard -->
+        <div class="dashboard-wrapper" id="dashboard-container">
+            <h2>
+                <span style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size: 1.2em;">🎛️</span> Menu
+                </span>
+                <button id="close-dashboard-btn">✖</button>
+            </h2>
+            <div class="dashboard-grid">
+                <button id="register-btn" class="dash-card">
+                    <span class="icon">📝</span>
+                    <span>Register Patient</span>
+                </button>
+                <button id="view-profile-btn" class="dash-card">
+                    <span class="icon">👤</span>
+                    <span>View Profiles</span>
+                </button>
+                <button id="summary-btn" class="dash-card">
+                    <span class="icon">📊</span>
+                    <span>Status Summary</span>
+                </button>
+                <button id="remarks-nav-btn" class="dash-card">
+                    <span class="icon">📋</span>
+                    <span>Remarks</span>
+                </button>
+                <button id="data-management-btn" class="dash-card">
+                    <span class="icon">💾</span>
+                    <span>Data Management</span>
+                </button>
+                <button id="logout-btn" class="dash-card" style="color: white;">
+                    <span class="icon">🚪</span>
+                    <span>Log Out</span>
+                </button>
+            </div>
         </div>
 
         <div id="patient-list-container">
             <div id="patient-list-header">
                 <h2>List of Patients</h2>
-                <button id="toggle-buttons-btn">💎</button>
+                <!-- Updated 3-lines menu button here -->
             </div>
             
             <div id="live-datetime-display"></div>
@@ -1499,6 +1648,17 @@
             const ADMIN_PASSWORD = 'urielllamasadmin2025';
             let countdownInterval = null;
 
+            // --- SECURITY: HTML SANITIZER ---
+            function escapeHTML(str) {
+                if (str === null || str === undefined) return '';
+                return String(str)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
             // --- DOM Elements ---
             const loginPage = document.getElementById('login-page');
             const appPage = document.getElementById('app-page');
@@ -1850,9 +2010,10 @@
                     patientsToDisplay.forEach(patient => { 
                         const patientItem = document.createElement('div');
                         patientItem.className = 'patient-item';
+                        // --- SECURITY UPDATE: Added escapeHTML below ---
                         patientItem.innerHTML = `
                             <div class="patient-name" data-id="${patient.id}">
-                                <span>${patient.name} (Age: ${patient.age})</span>
+                                <span>${escapeHTML(patient.name)} (Age: ${escapeHTML(patient.age)})</span>
                                 <span>&#9662;</span>
                             </div>
                             <div class="patient-actions">
@@ -1864,7 +2025,6 @@
                         patientListDiv.appendChild(patientItem);
                     });
                 }
-
                 if (totalPages > 1) {
                     mainPageInfoSpan.textContent = `Page ${mainListPage} of ${totalPages}`;
                     mainPrevBtn.disabled = mainListPage === 1;
@@ -1904,17 +2064,18 @@
                     const rrEval = isAdult ? getVitalStatus('RR', record.rr) : { colorClass: '' };
                     const tempEval = isAdult ? getVitalStatus('TEMP', record.temp) : { colorClass: '' };
                     const spo2Eval = isAdult ? getVitalStatus('SpO2', record.spo2) : { colorClass: '' };
-                    // Added Blood Sugar Cell
+                    
+                    // --- SECURITY UPDATE: Added escapeHTML below ---
                     tableHTML += `
                         <tr>
-                            <td>${record.date}</td>
-                            <td>${formatTime12Hour(record.time)}</td>
-                            <td class="${bpEval.color}">${record.bp}</td>
-                            <td class="${prEval.colorClass}">${record.pr}</td>
-                            <td class="${rrEval.colorClass}">${record.rr}</td>
-                            <td class="${tempEval.colorClass}">${record.temp}°C</td>
-                            <td class="${spo2Eval.colorClass}">${record.spo2}%</td>
-                            <td>${record.bloodSugar || '-'}</td>
+                            <td>${escapeHTML(record.date)}</td>
+                            <td>${escapeHTML(formatTime12Hour(record.time))}</td>
+                            <td class="${bpEval.color}">${escapeHTML(record.bp)}</td>
+                            <td class="${prEval.colorClass}">${escapeHTML(record.pr)}</td>
+                            <td class="${rrEval.colorClass}">${escapeHTML(record.rr)}</td>
+                            <td class="${tempEval.colorClass}">${escapeHTML(record.temp)}°C</td>
+                            <td class="${spo2Eval.colorClass}">${escapeHTML(record.spo2)}%</td>
+                            <td>${escapeHTML(record.bloodSugar || '-')}</td>
                             <td class="records-options">
                                 <button class="edit-vital-btn" data-patient-id="${patient.id}" data-index="${originalIndex}">Edit</button>
                                 <button class="delete-vital-btn danger" data-patient-id="${patient.id}" data-index="${originalIndex}">Delete</button>
@@ -1980,10 +2141,11 @@
                             statusButton = `<button class="btn-success done-remark-btn" data-id="${remark.id}">Done</button>`;
                         }
                         
+                        // --- SECURITY UPDATE: Added escapeHTML below ---
                         row.innerHTML = `
-                            <td>${remark.title}</td>
-                            <td>${new Date(remark.date).toLocaleDateString()} ${new Date(remark.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-                            <td>${remark.status}</td>
+                            <td>${escapeHTML(remark.title)}</td>
+                            <td>${escapeHTML(new Date(remark.date).toLocaleDateString())} ${escapeHTML(new Date(remark.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}))}</td>
+                            <td>${escapeHTML(remark.status)}</td>
                             <td class="remarks-options-cell">
                                 <button class="btn-info edit-remark-btn" data-id="${remark.id}">Edit</button>
                                 ${statusButton}
@@ -2046,12 +2208,14 @@
                 profileListSection.style.display = 'none';
                 profileDetailsSection.style.display = 'block';
                 profileDetailsName.textContent = patient.name;
+                
+                // --- SECURITY UPDATE: Added escapeHTML below ---
                 profileDetailsContent.innerHTML = `
-                    <p><strong>Name:</strong> ${patient.name}</p>
-                    <p><strong>Gender:</strong> ${patient.gender}</p>
-                    <p><strong>Age:</strong> ${patient.age}</p>
-                    <p><strong>Birthday:</strong> ${patient.birthday}</p>
-                    `;
+                    <p><strong>Name:</strong> ${escapeHTML(patient.name)}</p>
+                    <p><strong>Gender:</strong> ${escapeHTML(patient.gender)}</p>
+                    <p><strong>Age:</strong> ${escapeHTML(patient.age)}</p>
+                    <p><strong>Birthday:</strong> ${escapeHTML(patient.birthday)}</p>
+                `;
             }
 
             // --- VITAL SIGN EVALUATION LOGIC ---
@@ -2710,17 +2874,39 @@
                 document.getElementById(modalId).style.display = 'flex';
             };
 
-            window.closeModal = (modalId) => {
+           window.closeModal = (modalId) => {
                 document.getElementById(modalId).style.display = 'none';
             };
 
-            // NEW: Toggle visibility of main buttons
+            // NEW: Sliding Dashboard Logic
+            const dashboardContainer = document.getElementById('dashboard-container');
+            const dashboardOverlay = document.getElementById('dashboard-overlay');
+            // Note: toggleButtonsBtn is already defined higher up in your code, but we will redefine the click action here
+            const closeDashboardBtn = document.getElementById('close-dashboard-btn');
+
+            // Open the slider
             toggleButtonsBtn.addEventListener('click', () => {
-                if (mainButtonsContainer.style.display === 'flex') {
-                    mainButtonsContainer.style.display = 'none';
-                } else {
-                    mainButtonsContainer.style.display = 'flex';
-                }
+                dashboardContainer.classList.add('open');
+                dashboardOverlay.classList.add('show');
+                // Prevent background scrolling on mobile
+                document.body.style.overflow = 'hidden'; 
+            });
+
+            // Close the slider function
+            const closeDashboard = () => {
+                dashboardContainer.classList.remove('open');
+                dashboardOverlay.classList.remove('show');
+                document.body.style.overflow = 'auto'; // Restore scrolling
+            };
+
+            // Close when clicking the 'X' or clicking the dark background overlay
+            closeDashboardBtn.addEventListener('click', closeDashboard);
+            dashboardOverlay.addEventListener('click', closeDashboard);
+            
+            // Optional: Close the slider automatically when a menu button is clicked
+            const dashCards = document.querySelectorAll('.dash-card');
+            dashCards.forEach(card => {
+                card.addEventListener('click', closeDashboard);
             });
             
             enterCodeBtn.addEventListener('click', () => {
@@ -3331,57 +3517,62 @@ extensionCodeForm.addEventListener('submit', async (e) => {
                         const rrEval = getVitalStatus('RR', record.rr);
                         const tempEval = getVitalStatus('TEMP', record.temp);
                         const spo2Eval = getVitalStatus('SpO2', record.spo2);
+                        
+                        // --- SECURITY UPDATE: Added escapeHTML below ---
                         vitalEvaluationsHTML = `
                             <div class="bp-result-display ${bpEvaluation.color}">
-                                <p><strong>BP: ${record.bp} mmHg (${bpEvaluation.level})</strong></p>
+                                <p><strong>BP: ${escapeHTML(record.bp)} mmHg (${bpEvaluation.level})</strong></p>
                                 <p><small>${bpEvaluation.desc}</small></p>
                                 ${bpEvaluation.note ? `<p class="vital-note">${bpEvaluation.note}</p>` : ''}
                             </div>
                             <div class="vital-evaluation-grid">
                                 <div class="vital-row ${prEval.colorClass}">
-                                    <span><strong>PR:</strong> ${record.pr} bpm</span>
+                                    <span><strong>PR:</strong> ${escapeHTML(record.pr)} bpm</span>
                                     <div>
                                         <strong>${prEval.status}</strong>
                                         ${prEval.note ? `<p class="vital-note">${prEval.note}</p>` : ''}
                                     </div>
                                 </div>
                                 <div class="vital-row ${rrEval.colorClass}">
-                                    <span><strong>RR:</strong> ${record.rr} breaths/min</span>
+                                    <span><strong>RR:</strong> ${escapeHTML(record.rr)} breaths/min</span>
                                     <div>
                                         <strong>${rrEval.status}</strong>
                                         ${rrEval.note ? `<p class="vital-note">${rrEval.note}</p>` : ''}
                                     </div>
                                 </div>
                                 <div class="vital-row ${tempEval.colorClass}">
-                                    <span><strong>TEMP:</strong> ${record.temp}°C</span>
+                                    <span><strong>TEMP:</strong> ${escapeHTML(record.temp)}°C</span>
                                     <div>
                                         <strong>${tempEval.status}</strong>
                                         ${tempEval.note ? `<p class="vital-note">${tempEval.note}</p>` : ''}
                                     </div>
                                 </div>
                                 <div class="vital-row ${spo2Eval.colorClass}">
-                                    <span><strong>SpO2:</strong> ${record.spo2}%</span>
+                                    <span><strong>SpO2:</strong> ${escapeHTML(record.spo2)}%</span>
                                     <div>
                                         <strong>${spo2Eval.status}</strong>
                                         ${spo2Eval.note ? `<p class="vital-note">${spo2Eval.note}</p>` : ''}
                                     </div>
                                 </div>
                                 <div class="vital-row">
-                                    <span><strong>Blood Sugar:</strong> ${record.bloodSugar || '-'}</span>
+                                    <span><strong>Blood Sugar:</strong> ${escapeHTML(record.bloodSugar || '-')}</span>
                                 </div>
                             </div>
                         `;
                     } else {
+                        // --- SECURITY UPDATE: Added escapeHTML below ---
                         vitalEvaluationsHTML = `
-                            <p><strong>BP:</strong> ${record.bp} mmHg</p>
-                            <p><strong>PR:</strong> ${record.pr} bpm</p>
-                            <p><strong>RR:</strong> ${record.rr} breaths/min</p>
-                            <p><strong>TEMP:</strong> ${record.temp}°C</p>
-                            <p><strong>SpO2:</strong> ${record.spo2}%</p>
-                            <p><strong>Blood Sugar:</strong> ${record.bloodSugar || '-'}</p> <p style="font-size: 0.8em; color: var(--secondary-color); margin-top: 10px;">Automatic evaluation is only available for patients 18 years and older.</p>
+                            <p><strong>BP:</strong> ${escapeHTML(record.bp)} mmHg</p>
+                            <p><strong>PR:</strong> ${escapeHTML(record.pr)} bpm</p>
+                            <p><strong>RR:</strong> ${escapeHTML(record.rr)} breaths/min</p>
+                            <p><strong>TEMP:</strong> ${escapeHTML(record.temp)}°C</p>
+                            <p><strong>SpO2:</strong> ${escapeHTML(record.spo2)}%</p>
+                            <p><strong>Blood Sugar:</strong> ${escapeHTML(record.bloodSugar || '-')}</p> <p style="font-size: 0.8em; color: var(--secondary-color); margin-top: 10px;">Automatic evaluation is only available for patients 18 years and older.</p>
                         `;
                     }
-                    summaryStatusDetails.innerHTML = `<p><strong>Patient:</strong> ${patient.name} (Age: ${patient.age})</p><hr>${vitalEvaluationsHTML}`;
+                    
+                    // --- SECURITY UPDATE: Added escapeHTML to patient name and age below ---
+                    summaryStatusDetails.innerHTML = `<p><strong>Patient:</strong> ${escapeHTML(patient.name)} (Age: ${escapeHTML(patient.age)})</p><hr>${vitalEvaluationsHTML}`;
                 }
             });
 
