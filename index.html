@@ -1584,6 +1584,15 @@
                 navigator.serviceWorker.register('./service-worker.js')
                 .then((reg) => console.log('Service Worker Registered!', reg))
                 .catch((err) => console.log('Service Worker registration failed:', err));
+
+                // NEW: Listen for the new Service Worker taking over, and auto-reload the page
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (!refreshing) {
+                        window.location.reload();
+                        refreshing = true;
+                    }
+                });
             }
 
             // 2. Handle the install prompt
